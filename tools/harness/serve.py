@@ -22,7 +22,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 BACKEND, FRONTEND = ROOT / "backend", ROOT / "frontend"
 WIN = os.name == "nt"
-PY = next((p for p in (BACKEND / ".venv/Scripts/python.exe", BACKEND / ".venv/bin/python") if p.exists()), Path(sys.executable))
+PY = next((BACKEND / d / s for d in ("venv", ".venv") for s in ("Scripts/python.exe", "bin/python") if (BACKEND / d / s).exists()), Path(sys.executable))
 
 
 def e2e_env() -> dict:

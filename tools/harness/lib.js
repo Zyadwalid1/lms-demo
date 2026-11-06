@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, '..', '..')
 const BACKEND = path.join(ROOT, 'backend')
 const PY =
   process.env.LMS_PYTHON ||
-  [path.join(BACKEND, '.venv', 'Scripts', 'python.exe'), path.join(BACKEND, '.venv', 'bin', 'python')].find((p) => fs.existsSync(p)) ||
+  ['venv', '.venv'].flatMap((d) => [path.join(BACKEND, d, 'Scripts', 'python.exe'), path.join(BACKEND, d, 'bin', 'python')]).find((p) => fs.existsSync(p)) ||
   'python'
 
 /** Load backend/.env.e2e (database URLs of the disposable e2e database) into this process. */

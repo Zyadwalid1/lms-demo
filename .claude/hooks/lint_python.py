@@ -16,8 +16,9 @@ path = (data.get("tool_input") or {}).get("file_path") or ""
 if not path.endswith(".py") or "backend" not in path.replace("\\", "/"):
     sys.exit(0)
 
-root = os.path.join(os.getcwd(), "backend")
-venv = [os.path.join(root, ".venv", "Scripts", "ruff.exe"), os.path.join(root, ".venv", "bin", "ruff")]
+# the project root, whatever folder the shell happens to be in
+root = os.path.join(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd(), "backend")
+venv = [os.path.join(root, d, sub, exe) for d in ("venv", ".venv") for sub, exe in (("Scripts", "ruff.exe"), ("bin", "ruff"))]
 ruff = next((p for p in venv if os.path.exists(p)), shutil.which("ruff"))
 if not ruff:
     sys.exit(0)

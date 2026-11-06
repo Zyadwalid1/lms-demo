@@ -24,6 +24,24 @@ Read before starting a milestone:
 * `docs/STRUCTURE.md`: backend layering and frontend folders.
 * `frontend/README.md`: the artwork and motion rules, with examples.
 * `docs/client-questions.md`: open business decisions. Never decide these yourself.
+* `docs/design/README.md`: the approved mockups (`docs/design/mockups/`), what we deliberately
+  do differently from them, and specs for the screens that have no mockup.
+
+---
+
+## Design reference (every screen)
+- Before building a screen, open its mockup(s) from `docs/design/mockups/`; the index is in `docs/design/README.md`. Match the layout, content and density.
+- Apply the documented differences: our artwork, dark mode, motion, our tokens, no stock photos, no hard-coded business numbers.
+- Screens without a mockup: follow the specs in the same README, and use the closest mockup it names.
+- Before calling a screen done, look at your own screenshot next to the mockup and fix what's missing or worse. A mockup feature with no API: add the API if it's small and additive (tests + typed); otherwise list it in `docs/NEEDS-USER.md`.
+
+## Long-running checks (save usage: wait, don't watch)
+- Run every check through `python tools/run_check.py <name> -- <command>`. It writes the full output to `logs/<name>.log` and prints only a short summary.
+  - Never stream a full test log into the conversation.
+  - Read the log only around a failure (search for the test name).
+- Anything over ~2 minutes (backend suite, E2E scripts, phone check, `vite build`): start it **in the background**, then **wait for it in one blocking call** rather than polling every few seconds. Or do unrelated work meanwhile.
+- Backend tests: `--keepdb --noinput` (reuses the `test_*` database instead of rebuilding it on Neon, which cuts minutes per run). Run single apps or test classes while iterating; run the full suite once per milestone and before ticking a box.
+- Re-run only what failed after a fix, then the full set once at the end.
 
 ---
 
@@ -94,7 +112,8 @@ Read before starting a milestone:
 ## Commands (Windows / PowerShell)
 
 ```powershell
-# backend (from backend/, venv active)
+# backend (from backend/, venv active: backend\venv). Prefer `cd backend; <cmd>` inside ONE
+# command, or absolute paths: hooks and later commands assume the shell is at the repo root.
 python manage.py test core apps        # full suite (needs no Redis)
 ruff check . ; ruff format --check .
 python manage.py makemigrations --check --dry-run
@@ -106,6 +125,9 @@ npm run dev                            # http://localhost:5173 (proxies /api)
 npx tsc -b                             # type check
 npx vite build                         # production build (watch the chunk sizes)
 npm run gen:api                        # regenerate src/api/schema.d.ts (Django running)
+
+# quiet wrapper for any long check (summary only; full log in logs/)
+python tools/run_check.py backend-tests -- python manage.py test core apps --keepdb --noinput --cwd backend
 
 # end to end (see tools/harness/README.md)
 node tools/harness/e2e_m1.js shots/m1
@@ -128,7 +150,7 @@ Sub-agents: `reviewer`, `e2e-tester`, `api-contract` (in `.claude/agents/`).
    - `makemigrations --check` is clean, or the new migrations are listed for the user.
 3. The frontend type check and production build pass. The main entry chunk didn't grow without a reason.
 4. An E2E script for the milestone (`tools/harness/e2e_<id>.js`) passes with no console errors and no 5xx. Earlier E2E scripts still pass.
-5. The phone overflow check passes on every new route. You've looked at light and dark screenshots yourself and fixed anything ugly.
+5. The phone overflow check passes on every new route. You've looked at the light and dark screenshots yourself **next to the mockups** (`docs/design/`) and fixed anything missing or ugly.
 6. The `reviewer` agent has been run on the diff and its findings fixed (or explained).
 7. These are updated:
    - `docs/build-status.md`: what was built, the bugs found and fixed, and any migrations the user must run;
