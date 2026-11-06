@@ -1,0 +1,12 @@
+{
+  "name": "lms-e2e-harness",
+  "private": true,
+  "description": "HARNESS ONLY: browser end-to-end checks. Never shipped.",
+  "scripts": {
+    "m1": "node e2e_m1.js ../../shots/m1",
+    "m2": "node e2e_m2.js ../../shots/m2"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

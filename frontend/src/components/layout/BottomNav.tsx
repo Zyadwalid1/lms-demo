@@ -1,0 +1,38 @@
+import { Compass, GraduationCap, Heart, Home, User } from 'lucide-react'
+
+import { cn } from '@/lib/cn'
+import { NavLink } from '@/lib/router'
+
+const items = [
+  { to: '/', label: 'Home', Icon: Home, end: true },
+  { to: '/courses', label: 'Explore', Icon: Compass },
+  { to: '/learn', label: 'My Learning', Icon: GraduationCap },
+  { to: '/wishlist', label: 'Wishlist', Icon: Heart },
+  { to: '/account', label: 'Account', Icon: User },
+]
+
+/** Learner navigation on phones (approved: balanced bottom navigation, five tabs). */
+export function BottomNav() {
+  return (
+    <nav aria-label="Main" className="vt-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <ul className="grid grid-cols-5">
+        {items.map(({ to, label, Icon, end }) => (
+          <li key={to}>
+            <NavLink
+              to={to}
+              end={end}
+              className={({ isActive }) => cn('flex h-15 flex-col items-center justify-center gap-1 text-[11px] font-medium', isActive ? 'text-primary' : 'text-muted')}
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon className="size-[22px]" strokeWidth={isActive ? 2.2 : 1.8} />
+                  {label}
+                </>
+              )}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
