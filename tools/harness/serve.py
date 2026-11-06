@@ -60,13 +60,13 @@ if not up("http://127.0.0.1:8000/api/v1/identity/csrf"):
 if env.get("REDIS_URL"):
     pool = ["--pool=solo"] if WIN else ["-c", "2"]
     start([str(PY), "-m", "celery", "-A", "config", "worker", "-l", "warning", *pool], BACKEND, env, "celery.log")
-if not up("http://127.0.0.1:5173/"):
+if not up("http://localhost:5173/"):
     npx = "npx.cmd" if WIN else "npx"
     subprocess.run([npx, "vite", "build"], cwd=FRONTEND, check=True)
     start([npx, "vite", "preview", "--port", "5173", "--strictPort"], FRONTEND, env, "vite.log")
 
 for _ in range(40):
-    if up("http://127.0.0.1:8000/api/v1/identity/csrf") and up("http://127.0.0.1:5173/"):
+    if up("http://127.0.0.1:8000/api/v1/identity/csrf") and up("http://localhost:5173/"):
         print("harness up: http://localhost:5173 (logs in tools/harness/*.log)")
         break
     time.sleep(1)

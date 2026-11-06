@@ -28,6 +28,8 @@ node e2e_m2.js ..\..\shots\m2                 # learning
 $env:E2E_DEMO_PASSWORD = "<ask the user>"
 node phone_check.js ..\..\shots\phone /learn /account /business
 ```
+In Git Bash, prefix the phone check with `MSYS_NO_PATHCONV=1`, or Bash rewrites `/learn` into a Windows path.
+
 The scripts exit non-zero on any failed step, page error, console error or HTTP 5xx. On a
 failure they save a screenshot to `<out>/…FAILED.png`.
 
