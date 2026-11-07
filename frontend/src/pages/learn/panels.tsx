@@ -11,6 +11,7 @@ import { EmptyState, ErrorState } from '@/components/ui/misc'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { useAnnouncements, useAnswer, useAsk, useMyReview, useQuestion, useQuestions, useResolve, useVote, useWriteReview } from '@/features/engagement/api'
+import { ReportButton } from '@/features/engagement/ReportButton'
 import { useMe } from '@/features/identity/auth'
 import { type Pin, pinnedSecond, playhead } from '@/features/learning/bunny'
 import { type Lecture, type Player, useAddNote, useDeleteNote, useNotes } from '@/features/learning/api'
@@ -296,6 +297,9 @@ function QuestionThread({ id, onBack }: { id: string; onBack: () => void }) {
             <CheckCircle2 /> Resolved
           </Badge>
         ) : null}
+        <div className="mt-2 flex justify-end">
+          <ReportButton kind="question" id={d.id} authorId={d.author.id} />
+        </div>
       </article>
 
       <h4 className="text-sm font-semibold">
@@ -311,6 +315,9 @@ function QuestionThread({ id, onBack }: { id: string; onBack: () => void }) {
               <span className="ml-auto text-xs text-muted">{relativeDate(a.created_at)}</span>
             </div>
             <p className="mt-2 text-sm whitespace-pre-wrap">{a.body}</p>
+            <div className="mt-1 flex justify-end">
+              <ReportButton kind="answer" id={a.id} authorId={a.author.id} />
+            </div>
           </li>
         ))}
       </ul>

@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useCategories, useCourse, usePreview, useReviews } from '@/features/catalog/api'
 import { useAddToCart, useCheckout, usePlanEnroll, useToggleWishlist } from '@/features/commerce/api'
 import { Price } from '@/features/catalog/CourseCard'
+import { ReportButton } from '@/features/engagement/ReportButton'
 import { useMe } from '@/features/identity/auth'
 import { cn } from '@/lib/cn'
 import { useCurrency } from '@/lib/currency'
@@ -124,6 +125,9 @@ function ReviewList({ courseId }: { courseId: string }) {
                 <p className="mt-1 text-muted">{r.instructor_reply}</p>
               </div>
             ) : null}
+            <div className="mt-2 flex justify-end">
+              <ReportButton kind="review" id={r.id} authorId={r.author.id} />
+            </div>
           </li>
         ))}
       </ul>

@@ -135,8 +135,8 @@ Part of the M5 brief. Each line is a control shown in an approved mockup. Build 
 - [x] Notification templates tab (exists: list/update; placeholders, preview, validation new)
 
 ## Reviews / moderation (P15)
-- [ ] Reviews, questions, answers lists with hide/show + reason (exists)
-- [ ] Reported queue (new: `content_reports`) and learner "Report" action (new)
+- [x] Reviews, questions, answers lists with hide/show + reason (exists)
+- [x] Reported queue (new: `content_reports`) and learner "Report" action (new)
 
 ## Companies (P16)
 - [ ] List, create, edit, status, seats (exists) · entitlements (exists) · admins + subscription (new)
