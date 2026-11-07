@@ -139,7 +139,7 @@ Part of the M5 brief. Each line is a control shown in an approved mockup. Build 
 - [x] Reported queue (new: `content_reports`) and learner "Report" action (new)
 
 ## Companies (P16)
-- [ ] List, create, edit, status, seats (exists) · entitlements (exists) · admins + subscription (new)
+- [x] List, create, edit, status, seats (exists) · entitlements (exists) · admins + subscription (new)
 
 ## 02 Reports (P17)
 - [x] Tabs: overview, sales, students, courses, subscriptions (new)
