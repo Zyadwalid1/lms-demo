@@ -66,13 +66,14 @@ function SubmitPanel({ course }: { course: StudioCourse }) {
   const submit = useSubmitForReview(course.id)
   const [summary, setSummary] = useState('')
   const [redo, setRedo] = useState(false)
+  const [major, setMajor] = useState(false)
   const [error, setError] = useState<{ message: string; problems: string[] } | null>(null)
   const company = course.ownership !== 'instructor' // company and platform courses publish straight away
 
   const onSubmit = () => {
     setError(null)
     submit.mutate(
-      { versionId: v.id, change_summary: summary.trim(), requires_recompletion: v.number > 1 && redo },
+      { versionId: v.id, change_summary: summary.trim(), requires_recompletion: v.number > 1 && redo, is_major_change: v.number > 1 && major },
       {
         onSuccess: (r) => toast.success(r.status === 'published' ? 'Published' : 'Sent for review'),
         onError: (e) => {
@@ -101,6 +102,15 @@ function SubmitPanel({ course }: { course: StudioCourse }) {
       <Field label="What changed (optional)" hint="A short note for the reviewer.">
         {(p) => <Textarea {...p} rows={3} maxLength={2000} value={summary} onChange={(e) => setSummary(e.target.value)} />}
       </Field>
+      {v.number > 1 && !company ? (
+        <div className="flex items-start gap-2.5">
+          <Checkbox id="major" checked={major} onCheckedChange={(c) => setMajor(c === true)} className="mt-0.5" />
+          <Label htmlFor="major" className="font-normal">
+            This is a major change
+            <span className="block text-[13px] text-muted">New sections, a different scope or a new price. The reviewer sees it flagged.</span>
+          </Label>
+        </div>
+      ) : null}
       {v.number > 1 ? (
         <div className="flex items-start gap-2.5">
           <Checkbox id="redo" checked={redo} onCheckedChange={(c) => setRedo(c === true)} className="mt-0.5" />

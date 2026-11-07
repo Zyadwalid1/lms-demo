@@ -160,6 +160,7 @@ class StudioCourseDetailOut(Schema):
     description: str
     level: str
     category_id: UUID | None = None
+    certificate_template_id: UUID | None = None
     outcomes: list[str]
     requirements: list[str]
     thumbnail_url: str

@@ -38,6 +38,7 @@ from core.permissions import OrgRole, org_scope
 from core.tenancy import tenant_context
 
 from . import bunny, media, resources, services
+from . import permissions as instructor_perms
 from .models import (
     Assignment,
     Course,
@@ -49,7 +50,6 @@ from .models import (
     Quiz,
     QuizQuestion,
     Section,
-    VideoLibrary,
 )
 from .studio_schemas import (
     StudioCouponCreateOut,
@@ -101,6 +101,8 @@ def editable(request, course_id) -> Course:
         allowed = request.user.is_staff
     else:
         allowed = CourseInstructor.objects.filter(course=course, user=request.user, can_edit=True).exists()
+        if allowed:
+            instructor_perms.ensure_active(request.user)  # suspended: courses stay live, studio off
     if not allowed:
         raise ServiceError("not_found", "Course not found.", status=404)
     return course
@@ -294,6 +296,7 @@ class CaptionIn(Schema):
 class SubmitIn(Schema):
     change_summary: str = Field("", max_length=2000)
     requires_recompletion: bool = False
+    is_major_change: bool = False  # puts an update in the "Course changes (major)" approvals tab
 
 
 class CouponIn(Schema):
@@ -392,6 +395,7 @@ def create_course(request, body: CourseIn):
         p = InstructorProfile.objects.filter(user=request.user).first()
         if p is None or p.status != InstructorProfile.Status.APPROVED:
             raise ServiceError("not_instructor", "Apply to teach and wait for approval first.", status=403)
+        instructor_perms.check_course_limit(request.user)
         ownership, org_id = Course.Ownership.INSTRUCTOR, None
     title = html.plain(body.title, 160).strip()
     slug = f"{slugify(title)[:100] or 'course'}-{secrets.token_hex(3)}"
@@ -481,6 +485,7 @@ def course(request, course_id: str):
         "level": c.level, "category_id": c.category_id, "outcomes": c.outcomes, "requirements": c.requirements, "thumbnail_url": c.thumbnail_url, "status": c.status,
         "ownership": c.ownership, "cpd_hours": float(c.cpd_hours) if c.cpd_hours else None,
         "in_subscription": c.in_subscription, "in_business": c.in_business,
+        "certificate_template_id": c.certificate_template_id,
         "price": {"free": price.is_free, "tier_id": price.tier_id, "tier": price.tier.name if price.tier else None,
                   "gbp_minor": price.tier.gbp_minor if price.tier else 0} if price else None,
         "versions": versions,
@@ -528,7 +533,12 @@ def submit(request, version_id: str, body: SubmitIn):
     v = _version(request, version_id)
     _refresh_unfinished_videos(v)
     v = services.submit(version=v, by=request.user, change_summary=html.plain(body.change_summary, 2000),
-                        requires_recompletion=body.requires_recompletion)  # fmt: skip
+                        requires_recompletion=body.requires_recompletion,
+                        is_major_change=body.is_major_change)  # fmt: skip
+    if v.status == CourseVersion.Status.IN_REVIEW and instructor_perms.publishes_without_review(
+        request.user, v.course
+    ):
+        v = services.approve(version=v, reviewer=request.user, notes="Published without review (permission).")
     return {"status": v.status}
 
 
@@ -689,7 +699,7 @@ def start_video_upload(request, body: VideoIn):
     """1) we create the video at Bunny, 2) the browser uploads the file directly with the
     returned TUS session, 3) Bunny's signed webhook moves the asset to 'ready'."""
     c = editable(request, body.course_id)
-    library = VideoLibrary.objects.filter(is_default=True).first()
+    library = instructor_perms.default_library(request.user, c)
     if library is None:
         raise ServiceError("video_unavailable", "Video uploads are not configured.", status=503)
     guid = bunny.create_video(library, html.plain(body.title, 200))
@@ -774,7 +784,7 @@ def fetch_video_from_link(request, body: VideoFetchIn):
     url = body.url.strip()
     if not url.startswith("https://"):
         raise ServiceError("bad_url", "Use an https:// link to the video file.")
-    library = VideoLibrary.objects.filter(is_default=True).first()
+    library = instructor_perms.default_library(request.user, c)
     if library is None:
         raise ServiceError("video_unavailable", "Video uploads are not configured.", status=503)
     marker = f"lh-{secrets.token_hex(8)}"
@@ -802,6 +812,7 @@ def create_coupon(request, course_id: str, body: CouponIn):
     c = editable(request, course_id)
     if c.ownership != Course.Ownership.INSTRUCTOR:
         raise ServiceError("not_sold", "Coupons are for marketplace courses.")
+    instructor_perms.check_coupons(request.user)
     if Coupon.objects.filter(code__iexact=body.code).exists():
         raise ServiceError("code_taken", "That code is already in use.")
     now = timezone.now()
@@ -995,3 +1006,93 @@ def set_payout_account(request, body: PayoutAccountIn):
     a = payouts.set_payout_account(user=request.user, method=body.method, paypal_email=body.paypal_email.strip(),
                                    stripe_account_id=body.stripe_account_id.strip(), country=body.country)  # fmt: skip
     return {"verified": a.verified_at is not None}
+
+
+# ---------------------------------------------------------------- certificate templates (mockup 23/30)
+class StudioCertTemplateIn(Schema):
+    name: str = Field(..., min_length=3, max_length=120)
+    layout: dict = Field(default_factory=dict)
+    signatory_name: str = Field("", max_length=120)
+    signatory_title: str = Field("", max_length=120)
+    show_qr_code: bool = True
+
+
+class StudioCertTemplateOut(Schema):
+    id: UUID
+    name: str
+    status: str
+    is_platform: bool
+    is_default: bool
+    layout: dict
+    signatory_name: str
+    signatory_title: str
+    show_qr_code: bool
+    decision_reason: str
+
+
+class StudioCourseTemplateIn(Schema):
+    template_id: UUID | None = None  # None = the platform default
+
+
+def _template_out(t) -> dict:
+    from .certificates import clean_layout
+
+    return {"id": t.id, "name": t.name, "status": t.status, "is_platform": t.created_by.is_staff,
+            "is_default": t.is_default, "layout": clean_layout(t.layout), "signatory_name": t.signatory_name,
+            "signatory_title": t.signatory_title, "show_qr_code": t.show_qr_code,
+            "decision_reason": t.decision_reason}  # fmt: skip
+
+
+def _instructor(request) -> None:
+    p = InstructorProfile.objects.filter(user=request.user).first()
+    if p is None or p.status != InstructorProfile.Status.APPROVED:
+        raise ServiceError("not_instructor", "Only approved instructors can do this.", status=403)
+    instructor_perms.ensure_active(request.user)
+
+
+@router.get("/certificate-templates", response=list[StudioCertTemplateOut])
+def certificate_templates(request):
+    """Active platform templates and the instructor's own (any status)."""
+    from .models import CertificateTemplate
+
+    rows = (
+        CertificateTemplate.objects.filter(owner_org__isnull=True)
+        .filter(Q(created_by__is_staff=True, status="active") | Q(created_by=request.user))
+        .exclude(status="archived")
+        .select_related("created_by")
+        .order_by("-is_default", "name")[:100]
+    )
+    return [_template_out(t) for t in rows]
+
+
+@router.post("/certificate-templates", response=StudioCertTemplateOut)
+def create_certificate_template(request, body: StudioCertTemplateIn):
+    """An instructor's own design: staff approve it before it can be used."""
+    from . import certificates
+
+    _instructor(request)
+    if not instructor_perms.for_user(request.user.id)["can_issue_certificates"]:
+        raise ServiceError("forbidden", "Your account can't create certificate templates.", status=403)
+    t = certificates.create_template(by=request.user, **body.dict())
+    return _template_out(t)
+
+
+@router.patch("/certificate-templates/{template_id}", response=StudioCertTemplateOut)
+def update_certificate_template(request, template_id: UUID, body: StudioCertTemplateIn):
+    from . import certificates
+    from .models import CertificateTemplate
+
+    _instructor(request)
+    t = get_object_or_404(CertificateTemplate.objects.select_related("created_by"), pk=template_id,
+                          created_by=request.user, owner_org__isnull=True)  # fmt: skip
+    t = certificates.update_template(template=t, by=request.user, **body.dict(exclude_unset=True))
+    return _template_out(t)
+
+
+@router.put("/courses/{course_id}/certificate-template", response=OkOut)
+def set_course_certificate_template(request, course_id: str, body: StudioCourseTemplateIn):
+    from . import certificates
+
+    c = editable(request, course_id)
+    certificates.set_course_template(course=c, template_id=body.template_id, by=request.user)
+    return {"ok": True}

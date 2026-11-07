@@ -177,10 +177,10 @@ export function useNewDraft(courseId: string) {
 export function useSubmitForReview(courseId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (v: { versionId: string; change_summary?: string; requires_recompletion?: boolean }) =>
+    mutationFn: (v: { versionId: string; change_summary?: string; requires_recompletion?: boolean; is_major_change?: boolean }) =>
       unwrap(api.POST('/api/v1/studio/versions/{version_id}/submit', {
         params: { path: { version_id: v.versionId } },
-        body: { change_summary: v.change_summary ?? '', requires_recompletion: v.requires_recompletion ?? false },
+        body: { change_summary: v.change_summary ?? '', requires_recompletion: v.requires_recompletion ?? false, is_major_change: v.is_major_change ?? false },
       })),
     onSuccess: () => Promise.all([courseChanged(qc, courseId), qc.invalidateQueries({ queryKey: ['studio', 'courses'] })]),
   })
