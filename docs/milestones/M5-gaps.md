@@ -142,10 +142,10 @@ Part of the M5 brief. Each line is a control shown in an approved mockup. Build 
 - [ ] List, create, edit, status, seats (exists) · entitlements (exists) · admins + subscription (new)
 
 ## 02 Reports (P17)
-- [ ] Tabs: overview, sales, students, courses, subscriptions (new)
-- [ ] KPIs vs previous period, revenue trend (revenue/orders toggle), enrolments by type, top courses,
+- [x] Tabs: overview, sales, students, courses, subscriptions (new)
+- [x] KPIs vs previous period, revenue trend (revenue/orders toggle), enrolments by type, top courses,
       sales by product type, recent sales (new)
-- [ ] Filters: date range, report type, category, instructor; Generate report; Export CSV / Export report (new)
+- [x] Filters: date range, report type, category, instructor; Generate report; Export CSV / Export report (new)
 
 ## 18 Settings (P18)
 - [ ] Tabs: general, payment, learning, notification, instructor, security (settings exist as key/value; typed editors new)

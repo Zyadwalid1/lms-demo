@@ -54,6 +54,7 @@ NOT_JSON = {  # files and webhooks
     "/api/v1/commerce/webhooks/stripe",
     "/api/v1/learning/certificates/{certificate_id}/pdf",
     "/api/v1/compliance/export.csv",
+    "/api/v1/console/reports/export.csv",
 }
 
 
