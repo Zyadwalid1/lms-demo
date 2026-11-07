@@ -5,14 +5,14 @@ Part of the M5 brief. Each line is a control shown in an approved mockup. Build 
 "new" = backend to build. Package numbers refer to `M5-console.md`.
 
 ## 26 Dashboard (P3)
-- [ ] Date range selector (7/30/90/custom) driving every widget (new: `range` param on overview)
-- [ ] KPI change vs previous period: students, instructors, courses, enrolments (new)
-- [ ] Sales overview: revenue, sales count, subscription revenue + trend chart (new: daily series)
-- [ ] Pending approvals: courses, certificate templates, major course changes (new counts)
-- [ ] Payout requests: count + total amount, "Review payout requests" (new, P12)
-- [ ] Needs attention: reported content, disputed payouts, failed payments, stuck jobs (new)
-- [ ] Recent activity feed with links (new: from audit + events)
-- [ ] Health tiles: DB, cache, queue, storage, Bunny, email, Stripe (new: extend `console/health`)
+- [x] Date range selector (7/30/90/custom) driving every widget (new: `range` param on overview)
+- [x] KPI change vs previous period: students, instructors, courses, enrolments (new)
+- [x] Sales overview: revenue, sales count, subscription revenue + trend chart (new: daily series)
+- [x] Pending approvals: courses, certificate templates, major course changes (new counts)
+- [x] Payout requests: count + total amount, "Review payout requests" (new, P12)
+- [x] Needs attention: reported content, disputed payouts, failed payments, stuck jobs (new)
+- [x] Recent activity feed with links (new: from audit + events)
+- [x] Health tiles: DB, cache, queue, storage, Bunny, email, Stripe (new: extend `console/health`)
 
 ## 25 Approvals (P4)
 - [ ] Queue tabs: All / New courses / Course changes (major) / Other (certificate templates) (new filters)

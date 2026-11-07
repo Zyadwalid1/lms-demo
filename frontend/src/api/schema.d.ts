@@ -2756,6 +2756,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/console/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Activity
+         * @description The latest things that happened on the platform, newest first, each with a link.
+         */
+        get: operations["apps_platform_console_dashboard_activity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/console/health": {
         parameters: {
             query?: never;
@@ -2765,7 +2785,7 @@ export interface paths {
         };
         /**
          * Health
-         * @description Background machinery: anything stuck or failing shows up here.
+         * @description Background machinery and outside services: anything stuck or failing shows up here.
          */
         get: operations["apps_platform_console_dashboard_health"];
         put?: never;
@@ -7338,31 +7358,135 @@ export interface components {
              */
             notes: string;
         };
+        /** ConsoleApprovalCountsOut */
+        ConsoleApprovalCountsOut: {
+            /** New Courses */
+            new_courses: number;
+            /** Certificate Templates */
+            certificate_templates: number;
+            /** Major Changes */
+            major_changes: number;
+            /** Other Changes */
+            other_changes: number;
+            /** Total */
+            total: number;
+        };
+        /** ConsoleAttentionOut */
+        ConsoleAttentionOut: {
+            /** Key */
+            key: string;
+            /** Count */
+            count: number;
+            /** Title */
+            title: string;
+            /** Detail */
+            detail: string;
+            /** Url */
+            url: string;
+            /** Tone */
+            tone: string;
+        };
+        /**
+         * ConsoleKpiOut
+         * @description One KPI with its value in the previous period (for the change badge).
+         */
+        ConsoleKpiOut: {
+            /** Value */
+            value: number;
+            /** Previous */
+            previous: number;
+            /** Change Pct */
+            change_pct: number | null;
+        };
         /** ConsoleOverviewOut */
         ConsoleOverviewOut: {
-            /** Users */
-            users: number;
-            /** New Users 30D */
-            new_users_30d: number;
-            /** Orders 30D */
-            orders_30d: number;
-            /** Revenue 30D Gbp Minor */
-            revenue_30d_gbp_minor: number;
-            /** Active Subscriptions */
-            active_subscriptions: number;
-            /** Companies */
-            companies: number;
-            /** Courses In Review */
-            courses_in_review: number;
-            /** Instructors Pending */
-            instructors_pending: number;
-            /** Tickets Open */
-            tickets_open: number;
-            /** Payouts Pending */
-            payouts_pending: number;
+            range: components["schemas"]["ConsoleRangeOut"];
+            students: components["schemas"]["ConsoleKpiOut"];
+            instructors: components["schemas"]["ConsoleKpiOut"];
+            courses: components["schemas"]["ConsoleKpiOut"];
+            enrolments: components["schemas"]["ConsoleKpiOut"];
+            sales: components["schemas"]["ConsoleSalesSummaryOut"];
+            approvals: components["schemas"]["ConsoleApprovalCountsOut"];
+            payout_requests: components["schemas"]["ConsolePayoutRequestSummaryOut"];
+            /** Attention */
+            attention: components["schemas"]["ConsoleAttentionOut"][];
+        };
+        /** ConsolePayoutRequestSummaryOut */
+        ConsolePayoutRequestSummaryOut: {
+            /** Pending */
+            pending: number;
+            /** Total Gbp Minor */
+            total_gbp_minor: number;
+        };
+        /**
+         * ConsolePointOut
+         * @description One point of a daily series (day = ISO date).
+         */
+        ConsolePointOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Value */
+            value: number;
+        };
+        /** ConsoleRangeOut */
+        ConsoleRangeOut: {
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /**
+             * Previous Start
+             * Format: date-time
+             */
+            previous_start: string;
+            /**
+             * Previous End
+             * Format: date-time
+             */
+            previous_end: string;
+            /** Days */
+            days: number;
+        };
+        /** ConsoleSalesSummaryOut */
+        ConsoleSalesSummaryOut: {
+            revenue_gbp_minor: components["schemas"]["ConsoleKpiOut"];
+            sales: components["schemas"]["ConsoleKpiOut"];
+            subscription_revenue_gbp_minor: components["schemas"]["ConsoleKpiOut"];
+            /** Series */
+            series: components["schemas"]["ConsolePointOut"][];
+        };
+        /** ConsoleActivityListOut */
+        ConsoleActivityListOut: {
+            /** Items */
+            items: components["schemas"]["ConsoleActivityOut"][];
+        };
+        /** ConsoleActivityOut */
+        ConsoleActivityOut: {
+            /** Kind */
+            kind: string;
+            /** Text */
+            text: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Url */
+            url: string;
         };
         /** ConsoleHealthOut */
         ConsoleHealthOut: {
+            /** Tiles */
+            tiles: components["schemas"]["ConsoleHealthTileOut"][];
             /** Outbox Pending */
             outbox_pending: number;
             /** Outbox Stuck */
@@ -7375,6 +7499,19 @@ export interface components {
             webhooks_unprocessed: number;
             /** Fx Latest */
             fx_latest: string | null;
+        };
+        /** ConsoleHealthTileOut */
+        ConsoleHealthTileOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Status */
+            status: string;
+            /** Detail */
+            detail: string;
+            /** Latency Ms */
+            latency_ms: number | null;
         };
         /** ConsoleOutboxFailOut */
         ConsoleOutboxFailOut: {
@@ -12125,7 +12262,11 @@ export interface operations {
     };
     apps_platform_console_dashboard_overview: {
         parameters: {
-            query?: never;
+            query?: {
+                range?: string;
+                start?: string | null;
+                end?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -12139,6 +12280,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsoleOverviewOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_dashboard_activity: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleActivityListOut"];
                 };
             };
         };
