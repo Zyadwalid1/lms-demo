@@ -80,3 +80,8 @@ def update_me(request, body: MePatchIn):
         user.preferred_currency = code
     user.save(update_fields=["full_name", "timezone", "preferred_currency"])
     return _me(user)
+
+
+from .invite_api import router as _instructor_invites  # noqa: E402
+
+router.add_router("/instructor-invites", _instructor_invites)
