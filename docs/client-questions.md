@@ -17,3 +17,12 @@ questions here, never decide them in code.
 | 9 | Notification wording, starter badges | Our wording; 5 badges | Wording, badge set |
 | 10 | Microsoft sign-in audience | Any work/school + personal accounts | Or company tenants only |
 | 11 | Production domain and hosting | None yet | Domain, hosting; needed for live Stripe/Bunny webhooks and Azure CORS |
+| 12 | Commission rules | Rules by course > instructor > category > price band > default; discounts reduce the instructor share proportionally | Which rules, and how discounts affect commission |
+| 13 | Payout methods | Stripe Connect paid automatically; PayPal, Wise and bank recorded and paid by staff by hand | Which methods to offer |
+| 14 | Payout requests | Instructors can request their available balance (past the hold, above the minimum) | On request, automatic monthly, or both |
+| 15 | Regional pricing | Staff can set a price per country; otherwise the currency price | Use it? Which countries? |
+| 16 | Promotions | One promotion per order; instructor coupons still work; no stacking | Stacking rules, first-purchase offer |
+| 17 | Plans and included courses | Each plan can list its courses; empty = every course marked "in subscription" | Which courses per plan |
+| 18 | Certificate expiry | No expiry by default; staff can set one per certificate | Should some courses expire (e.g. compliance)? |
+| 19 | 2-step sign-in | Optional for users; staff can be required to use it | Require for staff / company admins? |
+| 20 | Maintenance mode, guest browsing, registration | All on (maintenance off) | Defaults for launch |
