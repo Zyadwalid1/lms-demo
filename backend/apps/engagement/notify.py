@@ -32,8 +32,12 @@ def _safe_url(url: str) -> str:
     return url if url.startswith("/") and not url.startswith("//") else ""
 
 
-def notify(user_ids, code: str, context: dict, *, url: str = "", dedupe: str = "") -> list:
-    """Returns the ids of the notifications created (already-sent duplicates are skipped)."""
+def notify(
+    user_ids, code: str, context: dict, *, url: str = "", dedupe: str = "", email: bool | None = None
+) -> list:
+    """Returns the ids of the notifications created (already-sent duplicates are skipped).
+    `email` overrides the template's email switch for this call (a broadcast chooses);
+    the platform switch "Send email copies" (notifications.email_enabled) always wins."""
     ids = list({str(u) for u in user_ids})
     if not ids:
         return []
@@ -67,7 +71,9 @@ def notify(user_ids, code: str, context: dict, *, url: str = "", dedupe: str = "
                 },
             )
             created = [r[0] for r in cur.fetchall()]
-    if created and tpl.email_enabled:
+        wants_email = tpl.email_enabled if email is None else email
+        send_email = wants_email and get_setting("notifications.email_enabled")
+    if created and send_email:
         from .tasks import email_notifications_task
 
         batch = [str(i) for i in created]
