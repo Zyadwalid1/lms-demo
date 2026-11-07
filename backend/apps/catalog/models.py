@@ -263,6 +263,9 @@ class Lecture(OwnedContent):
     min_watch_pct = models.PositiveSmallIntegerField(
         default=90, validators=[MaxValueValidator(100)]
     )  # video counts as complete after this share watched
+    # Learners must finish this lecture first. A lecture_key (stable across versions), and
+    # always an EARLIER lecture of the same version, so there can be no loops.
+    prerequisite_key = models.UUIDField(null=True, blank=True)
 
     class Meta:
         db_table = table(SCHEMA, "lectures")

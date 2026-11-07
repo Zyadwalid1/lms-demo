@@ -14,6 +14,7 @@ RLS applies; company-private content is only writable inside its company.
 
 from contextlib import contextmanager
 from functools import wraps
+from uuid import UUID
 
 from django.db import connection, transaction
 from django.db.models import Max, Sum
@@ -171,8 +172,15 @@ def publish_checklist(version: CourseVersion) -> list[str]:
     )
     if not lectures:
         problems.append("Add at least one lecture.")
+    order = _course_order(version)
     for lec in lectures:
         where = f"'{lec.title}'"
+        # a prerequisite can break later (the other lesson was deleted or moved below this one)
+        if lec.prerequisite_key and (
+            lec.prerequisite_key not in order
+            or order.index(lec.prerequisite_key) > order.index(lec.lecture_key)
+        ):
+            problems.append(f"Lesson {where} needs a prerequisite that comes before it.")
         if lec.kind == Lecture.Kind.VIDEO and (
             lec.video is None or lec.video.status not in (MediaAsset.Status.PLAYABLE, MediaAsset.Status.READY)
         ):
@@ -226,6 +234,7 @@ def create_draft(*, course: Course, by) -> CourseVersion:
             version=draft, title=sec.title, description=sec.description, position=sec.position
         )
     copy_fields = [
+        "prerequisite_key",
         "kind",
         "title",
         "position",
@@ -440,8 +449,29 @@ def delete_section(*, section: Section) -> None:
     section.delete()
 
 
+def _course_order(version) -> list:
+    """Lecture keys in the order learners meet them."""
+    return list(
+        Lecture.objects.filter(version=version)
+        .order_by("section__position", "position")
+        .values_list("lecture_key", flat=True)
+    )
+
+
+def _check_prerequisite(lecture: Lecture, key) -> None:
+    order = _course_order(lecture.version)
+    key = UUID(str(key))
+    if key == lecture.lecture_key:
+        raise ServiceError("bad_prerequisite", "A lesson can't be its own prerequisite.")
+    if key not in order:
+        raise ServiceError("bad_prerequisite", "Pick a lesson from this course.")
+    if order.index(key) > order.index(lecture.lecture_key):
+        raise ServiceError("bad_prerequisite", "The prerequisite must come before this lesson.")
+
+
 LECTURE_FIELDS = {"title", "body", "is_preview", "is_required", "duration_sec", "external_url", "live_starts_at",
-                  "live_duration_min", "live_join_url", "min_watch_pct", "video_id", "section_id"}  # fmt: skip
+                  "live_duration_min", "live_join_url", "min_watch_pct", "video_id", "section_id",
+                  "prerequisite_key"}  # fmt: skip
 
 
 @authored
@@ -462,6 +492,8 @@ def update_lecture(*, lecture: Lecture, **changes) -> Lecture:
         if asset is None:
             raise ServiceError("bad_video", "That video does not exist.")
         changes.setdefault("duration_sec", asset.duration_sec)
+    if changes.get("prerequisite_key"):
+        _check_prerequisite(lecture, changes["prerequisite_key"])
     if "section_id" in changes:
         target = Section.objects.filter(pk=changes["section_id"], version=lecture.version).first()
         if target is None:

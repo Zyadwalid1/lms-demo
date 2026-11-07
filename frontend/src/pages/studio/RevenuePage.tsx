@@ -250,6 +250,13 @@ export function RevenuePage() {
   return (
     <div>
       <PageHeader title="Sales & earnings" description="What your courses have earned, month by month and course by course." />
+      {data ? (
+        // the rate is set by LearnHub staff; past sales keep the rate they were made at
+        <p className="-mt-2 mb-5 text-sm text-muted">
+          You keep <span className="font-medium text-text tabular">{Math.round((100 - data.platform_fee_pct) * 100) / 100}%</span> of each marketplace sale. LearnHub’s fee is{' '}
+          <span className="tabular">{data.platform_fee_pct}%</span>{data.fee_is_custom ? ', agreed for your account' : ''}.
+        </p>
+      ) : null}
       {q.isPending ? (
         <Loading />
       ) : q.isError || !data ? (

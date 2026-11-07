@@ -1,4 +1,4 @@
-import { Check, CheckCircle2, Clock, Eye, Settings2, Star } from 'lucide-react'
+import { Check, CheckCircle2, Clock, Eye, Lock, Settings2, Star } from 'lucide-react'
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -43,6 +43,7 @@ type LectureDraft = {
   live_duration_min: string
   live_join_url: string
   min_watch_pct: string
+  prerequisite: string // an earlier lesson's key, or '' for none
   dur_h: string
   dur_m: string
   dur_s: string
@@ -62,6 +63,7 @@ function lectureDraft(l: StudioLecture): LectureDraft {
     live_duration_min: l.live_duration_min ? String(l.live_duration_min) : '60',
     live_join_url: l.live_join_url,
     min_watch_pct: String(l.min_watch_pct),
+    prerequisite: l.prerequisite_key ?? '',
     dur_h: pad(d.h),
     dur_m: pad(d.m),
     dur_s: pad(d.s),
@@ -75,6 +77,18 @@ function rebase<T extends Record<string, unknown>>(current: T, before: T, fresh:
   return next
 }
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+/** The lessons before this one, in course order: the only valid prerequisites. */
+function earlierLessons(course: StudioCourse, lectureId: string) {
+  const out: { key: string; label: string }[] = []
+  for (const [si, s] of (course.working_version?.sections ?? []).entries()) {
+    for (const [li, l] of s.lectures.entries()) {
+      if (l.id === lectureId) return out
+      out.push({ key: l.key, label: `${si + 1}.${li + 1} ${l.title}` })
+    }
+  }
+  return out
+}
 
 const httpsOk = (u: string) => !u || /^https:\/\/\S+\.\S+/.test(u)
 const durationOf = (d: LectureDraft) => Number(d.dur_h) * 3600 + Number(d.dur_m) * 60 + Number(d.dur_s)
@@ -153,6 +167,9 @@ export function LessonEditor({ course, lecture, number, readOnly, onDirty, onSav
     const okPart = (v: string, max: number) => /^\d{1,2}$/.test(v.trim()) && Number(v) <= max
     if (!okPart(lec.dur_h, 23) || !okPart(lec.dur_m, 59) || !okPart(lec.dur_s, 59)) errs.duration = 'Use hours, minutes (0–59) and seconds (0–59).'
   }
+  const earlier = useMemo(() => earlierLessons(course, lecture.id), [course, lecture.id])
+  // a prerequisite moved below this lesson (or deleted) is shown so it can be fixed
+  if (lec.prerequisite && !earlier.some((e) => e.key === lec.prerequisite)) errs.prerequisite = 'Pick a lesson that comes before this one.'
   const quizErrs = quiz ? quizSettingsErrors(quiz) : {}
   const asgErrs = asg ? assignmentErrors(asg) : {}
   const invalid = Object.keys(errs).length + Object.keys(quizErrs).length + Object.keys(asgErrs).length > 0
@@ -176,6 +193,7 @@ export function LessonEditor({ course, lecture, number, readOnly, onDirty, onSav
       if (lec.live_duration_min !== s.live_duration_min) body.live_duration_min = Number(lec.live_duration_min)
       if (lec.live_join_url !== s.live_join_url) body.live_join_url = lec.live_join_url.trim()
       if (lec.min_watch_pct !== s.min_watch_pct) body.min_watch_pct = Number(lec.min_watch_pct)
+      if (lec.prerequisite !== s.prerequisite) body.prerequisite_key = lec.prerequisite || null
       if (durationPending) body.duration_sec = durationOf(lec)
       if (Object.keys(body).length) await updateLecture.mutateAsync({ lectureId: lecture.id, body })
       if (quizChanged && quiz && lecture.quiz) await updateQuiz.mutateAsync({ quizId: lecture.quiz.id, body: quizSettingsPayload(quiz) })
@@ -372,6 +390,26 @@ export function LessonEditor({ course, lecture, number, readOnly, onDirty, onSav
                 </div>
               </div>
             ) : null}
+
+            <div className="grid gap-2">
+              <SettingRow icon={<Lock />} title="Prerequisite lesson" body={earlier.length ? 'Learners must complete another lesson first.' : 'The first lesson can’t have one.'}>
+                <Switch
+                  checked={!!lec.prerequisite}
+                  disabled={readOnly || (!earlier.length && !lec.prerequisite)}
+                  onCheckedChange={(on) => set({ prerequisite: on ? (earlier.at(-1)?.key ?? '') : '' })}
+                  aria-label="Require another lesson first"
+                />
+              </SettingRow>
+              {lec.prerequisite ? (
+                <div className="ml-7 grid gap-1">
+                  <NativeSelect aria-label="Lesson to complete first" value={lec.prerequisite} disabled={readOnly} onChange={(e) => set({ prerequisite: e.target.value })} aria-invalid={errs.prerequisite ? true : undefined} aria-describedby={errs.prerequisite ? `${uid}-pre` : undefined}>
+                    {earlier.some((e) => e.key === lec.prerequisite) ? null : <option value={lec.prerequisite}>Missing lesson</option>}
+                    {earlier.map((e) => <option key={e.key} value={e.key}>{e.label}</option>)}
+                  </NativeSelect>
+                  {errs.prerequisite ? <p id={`${uid}-pre`} className="text-[13px] text-danger">{errs.prerequisite}</p> : null}
+                </div>
+              ) : null}
+            </div>
 
             <SettingRow icon={<Star />} title="Required" body="Learners must finish it to complete the course.">
               <Switch checked={lec.is_required} disabled={readOnly} onCheckedChange={(is_required) => set({ is_required })} aria-label="Required to complete the course" />

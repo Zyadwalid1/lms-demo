@@ -68,7 +68,27 @@ def _lecture(e: Enrollment, key) -> Lecture:
     )
     if lec is None:
         raise ServiceError("not_found", "Lecture not found.", status=404)
+    _check_unlocked(e, lec)
     return lec
+
+
+def _check_unlocked(e: Enrollment, lec: Lecture) -> None:
+    """A lesson with a prerequisite stays locked until that earlier lesson is complete.
+    A prerequisite missing from the live version (deleted later) does not lock anything."""
+    if not lec.prerequisite_key:
+        return
+    before = (
+        Lecture.objects.filter(version_id=lec.version_id, lecture_key=lec.prerequisite_key)
+        .only("title")
+        .first()
+    )
+    if before is None:
+        return
+    done = LectureProgress.objects.filter(
+        enrollment=e, lecture_key=lec.prerequisite_key, completed_at__isnull=False
+    ).exists()
+    if not done:
+        raise ServiceError("locked", f"Finish “{before.title}” first.", status=403)
 
 
 # ---------------------------------------------------------------- my learning
@@ -133,13 +153,24 @@ def player(request, enrollment_id: str):
             "lecture_key", "completed_at", "last_position_sec"
         )
     }
+    tree = curriculum(e.course.live_version)
+    titles = {lec.lecture_key: lec.title for s in tree for lec in s.lectures.all()}
+
+    def finished(key):
+        return bool(done.get(key) and done[key].completed_at)
+
+    def prereq(lec):  # the same rule as _check_unlocked, without extra queries
+        return lec.prerequisite_key if lec.prerequisite_key in titles else None
+
     sections = [
         {"id": s.id, "title": s.title, "lectures": [
             {"key": lec.lecture_key, "title": lec.title, "kind": lec.kind, "duration_sec": lec.duration_sec,
-             "completed": bool(done.get(lec.lecture_key) and done[lec.lecture_key].completed_at),
-             "position_sec": done[lec.lecture_key].last_position_sec if lec.lecture_key in done else 0}
+             "completed": finished(lec.lecture_key),
+             "position_sec": done[lec.lecture_key].last_position_sec if lec.lecture_key in done else 0,
+             "prerequisite_key": prereq(lec), "prerequisite_title": titles.get(prereq(lec)),
+             "locked": bool(prereq(lec)) and not finished(prereq(lec))}
             for lec in s.lectures.all()]}
-        for s in curriculum(e.course.live_version)
+        for s in tree
     ]  # fmt: skip
     cert = Certificate.objects.filter(enrollment=e).values_list("id", flat=True).first()
     return {"enrollment_id": e.id, "course_id": e.course_id, "slug": e.course.slug, "title": e.course.title,

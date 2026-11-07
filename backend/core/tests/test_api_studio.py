@@ -406,6 +406,70 @@ class StudioApiTest(SchemaTransactionTestCase):
         self.assertEqual(self.call("get", "/dashboard").json()["to_mark"], 0)
 
 
+class PrerequisiteTest(SchemaTransactionTestCase):
+    """A lesson can require an earlier lesson: studio rules, the publish checklist and the
+    learner lock (every lesson endpoint refuses until the earlier one is complete)."""
+
+    def test_prerequisite_lesson_rules_and_learner_lock(self):
+        from apps.commerce.models import CoursePrice
+        from apps.learning import services as learning
+
+        staff, teacher, sara, _ = f.users()
+        f.money(staff)
+        InstructorProfile.objects.create(user=teacher, status="approved")
+        self.client.force_login(teacher)
+
+        def call(method, path, data=None):
+            return getattr(self.client, method)(API + path, data=data or {}, content_type="application/json")
+
+        c = call("post", "/courses", {"title": "Steps"}).json()
+        v = call("get", f"/courses/{c['id']}").json()["working_version"]["id"]
+        sec = call("post", f"/versions/{v}/sections", {"title": "One"}).json()["id"]
+        first, second = (
+            call(
+                "post", f"/sections/{sec}/lectures", {"kind": "article", "title": t, "body": "<p>x</p>"}
+            ).json()
+            for t in ("Basics", "Next step")
+        )
+        for lesson, key in (
+            (first, second["key"]),
+            (second, second["key"]),  # later lesson, itself,
+            (second, "11111111-2222-3333-4444-555555555555"),
+        ):  # not in this course
+            r = call("patch", f"/lectures/{lesson['id']}", {"prerequisite_key": key})
+            self.assertEqual(r.json()["error"]["code"], "bad_prerequisite")
+        self.assertEqual(
+            call("patch", f"/lectures/{second['id']}", {"prerequisite_key": first["key"]}).status_code, 200
+        )
+        tree = call("get", f"/courses/{c['id']}").json()["working_version"]
+        self.assertEqual(tree["sections"][0]["lectures"][1]["prerequisite_key"], first["key"])
+
+        # moving the lesson above its prerequisite blocks publishing until fixed
+        call("put", f"/sections/{sec}/lectures/order", {"ids": [second["id"], first["id"]]})
+        problems = call("get", f"/courses/{c['id']}").json()["working_version"]["checklist"]
+        self.assertEqual(problems, ["Lesson 'Next step' needs a prerequisite that comes before it."])
+        call("put", f"/sections/{sec}/lectures/order", {"ids": [first["id"], second["id"]]})
+        self.assertEqual(call("post", f"/versions/{v}/submit").status_code, 200)
+        with tenant_context(user_id=staff.id, staff=True):
+            cat.approve(version=CourseVersion.objects.get(pk=v), reviewer=staff)
+            course = Course.objects.get(pk=c["id"])
+            CoursePrice.objects.create(course=course, is_free=True)
+            enrol = learning.enrol(user=sara, course=course, source="free").id
+
+        self.client.force_login(sara)
+        base = f"/api/v1/learning/enrollments/{enrol}"
+        lessons = self.client.get(base).json()["sections"][0]["lectures"]
+        self.assertEqual(
+            [(x["locked"], x["prerequisite_title"]) for x in lessons], [(False, None), (True, "Basics")]
+        )
+        r = self.client.get(f"{base}/lectures/{second['key']}")
+        self.assertEqual((r.status_code, r.json()["error"]["message"]), (403, "Finish “Basics” first."))
+        self.assertEqual(self.client.post(f"{base}/lectures/{second['key']}/complete").status_code, 403)
+        self.client.post(f"{base}/lectures/{first['key']}/complete")
+        self.assertEqual(self.client.get(f"{base}/lectures/{second['key']}").status_code, 200)
+        self.assertFalse(self.client.get(base).json()["sections"][0]["lectures"][1]["locked"])
+
+
 class ContentWriteLockTest(SchemaTransactionTestCase):
     def test_course_content_is_written_only_by_authoring_services(self):
         staff, teacher, sara, _ = f.users()

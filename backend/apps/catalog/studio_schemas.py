@@ -55,7 +55,7 @@ class StudioEditorVideoOut(Schema):
     duration_sec: int
     encode_progress: int
     filename: str = ""
-    size_bytes: int = 0
+    size_bytes: int | None = None  # unknown until Bunny reports it
 
 
 class StudioEditorOptionOut(Schema):
@@ -113,6 +113,7 @@ class StudioEditorLectureOut(Schema):
     live_duration_min: int | None = None
     live_join_url: str
     min_watch_pct: int
+    prerequisite_key: UUID | None = None  # an earlier lesson learners must finish first
     resources: list[StudioEditorResourceOut]
     video: StudioEditorVideoOut | None = None
     quiz: StudioEditorQuizOut | None = None
@@ -416,6 +417,8 @@ class StudioRevenueOut(Schema):
     balance: StudioRevenueBalanceOut
     by_month: list[StudioRevenueMonthOut]
     by_course: list[StudioRevenueCourseOut]
+    platform_fee_pct: float  # the platform's cut of a marketplace sale for this instructor
+    fee_is_custom: bool
 
 
 class StudioPayoutOut(Schema):

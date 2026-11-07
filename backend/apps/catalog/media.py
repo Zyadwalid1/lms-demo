@@ -125,7 +125,11 @@ def save_parts_and_moments(asset: MediaAsset, *, parts: list[dict], moments: lis
                  "end": parts[i + 1]["start"] if i + 1 < len(parts) else max(length, p["start"] + 1)}
                 for i, p in enumerate(parts)]  # fmt: skip
     bunny.update_video(asset.library, str(asset.bunny_video_guid), chapters=chapters, moments=moments)
-    meta = {**(cache.get(_meta_key(asset)) or {"resolutions": [], "captions": []}), "parts": parts, "moments": moments}
+    meta = {
+        **(cache.get(_meta_key(asset)) or {"resolutions": [], "captions": []}),
+        "parts": parts,
+        "moments": moments,
+    }
     cache.set(_meta_key(asset), meta, META_TTL_SEC)  # learners see the new parts straight away
     return {"parts": parts, "moments": moments}
 

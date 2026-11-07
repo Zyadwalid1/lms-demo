@@ -2600,6 +2600,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/console/platform-fee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Platform Fee */
+        get: operations["apps_platform_console_platform_fee"];
+        /**
+         * Set Platform Fee
+         * @description The cut new instructors get on approval. Instructors already approved keep theirs.
+         */
+        put: operations["apps_platform_console_set_platform_fee"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/instructors/{user_id}/fee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Instructor Fee */
+        put: operations["apps_platform_console_set_instructor_fee"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/console/instructors/{user_id}/decision": {
         parameters: {
             query?: never;
@@ -3964,6 +4002,15 @@ export interface components {
             completed: boolean;
             /** Position Sec */
             position_sec: number;
+            /**
+             * Locked
+             * @default false
+             */
+            locked: boolean;
+            /** Prerequisite Key */
+            prerequisite_key?: string | null;
+            /** Prerequisite Title */
+            prerequisite_title?: string | null;
         };
         /** PlayerOut */
         PlayerOut: {
@@ -5901,6 +5948,8 @@ export interface components {
             live_join_url: string;
             /** Min Watch Pct */
             min_watch_pct: number;
+            /** Prerequisite Key */
+            prerequisite_key?: string | null;
             /** Resources */
             resources: components["schemas"]["StudioEditorResourceOut"][];
             video?: components["schemas"]["StudioEditorVideoOut"] | null;
@@ -6014,11 +6063,8 @@ export interface components {
              * @default
              */
             filename: string;
-            /**
-             * Size Bytes
-             * @default 0
-             */
-            size_bytes: number;
+            /** Size Bytes */
+            size_bytes?: number | null;
         };
         /** StudioVersionSummaryOut */
         StudioVersionSummaryOut: {
@@ -6201,6 +6247,8 @@ export interface components {
             video_id?: string | null;
             /** Section Id */
             section_id?: string | null;
+            /** Prerequisite Key */
+            prerequisite_key?: string | null;
         };
         /** QuizPatch */
         QuizPatch: {
@@ -6841,6 +6889,10 @@ export interface components {
             by_month: components["schemas"]["StudioRevenueMonthOut"][];
             /** By Course */
             by_course: components["schemas"]["StudioRevenueCourseOut"][];
+            /** Platform Fee Pct */
+            platform_fee_pct: number;
+            /** Fee Is Custom */
+            fee_is_custom: boolean;
         };
         /** StudioPayoutOut */
         StudioPayoutOut: {
@@ -6912,6 +6964,30 @@ export interface components {
              * @default
              */
             notes: string;
+        };
+        /** ConsoleFeeOut */
+        ConsoleFeeOut: {
+            /** Default Fee Pct */
+            default_fee_pct: number;
+        };
+        /** ConsoleFeeIn */
+        ConsoleFeeIn: {
+            /** Fee Pct */
+            fee_pct: number;
+        };
+        /** ConsoleInstructorFeeOut */
+        ConsoleInstructorFeeOut: {
+            /** User Id */
+            user_id: string;
+            /** Platform Fee Pct */
+            platform_fee_pct: number;
+            /** Fee Is Custom */
+            fee_is_custom: boolean;
+        };
+        /** ConsoleInstructorFeeIn */
+        ConsoleInstructorFeeIn: {
+            /** Fee Pct */
+            fee_pct?: number | null;
         };
         /** DecisionIn */
         DecisionIn: {
@@ -10982,6 +11058,76 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    apps_platform_console_platform_fee: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleFeeOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_set_platform_fee: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleFeeIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleFeeOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_set_instructor_fee: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleInstructorFeeIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleInstructorFeeOut"];
+                };
             };
         };
     };

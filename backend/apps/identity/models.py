@@ -7,6 +7,7 @@ swapping the user model later is one of the few changes Django cannot migrate.
 """
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.validators import MaxValueValidator
 from django.db import models
 
 from core.db import table
@@ -88,6 +89,11 @@ class InstructorProfile(BaseModel):
     expertise = models.JSONField(default=list, blank=True)  # ["Web development", "Python"]
     public_slug = models.SlugField(max_length=80, unique=True, null=True, blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)
+    # The platform's cut of this instructor's marketplace sales (2000 = 20%). Set from the
+    # default when approved; staff can change it. NULL = use the platform default.
+    platform_fee_bps = models.PositiveIntegerField(
+        null=True, blank=True, validators=[MaxValueValidator(10000)]
+    )
     # Denormalised counters, refreshed by jobs (never COUNT(*) on page load)
     rating_avg = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     rating_count = models.PositiveIntegerField(default=0)

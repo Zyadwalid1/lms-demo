@@ -14,6 +14,7 @@ permission check, and only for that course.
 import os
 import secrets
 from datetime import timedelta
+from uuid import UUID
 
 from django.db import transaction
 from django.db.models import Count, DecimalField, F, Prefetch, Q, Sum
@@ -197,6 +198,7 @@ class LecturePatch(Schema):
     min_watch_pct: int | None = Field(None, ge=0, le=100)
     video_id: str | None = None
     section_id: str | None = None
+    prerequisite_key: UUID | None = None  # send null to remove
 
 
 class QuizPatch(Schema):
@@ -414,7 +416,8 @@ def _editor_tree(version: CourseVersion) -> list:
                     "position": lec.position, "is_preview": lec.is_preview, "is_required": lec.is_required,
                     "duration_sec": lec.duration_sec, "body": lec.body, "external_url": lec.external_url,
                     "live_starts_at": lec.live_starts_at, "live_duration_min": lec.live_duration_min,
-                    "live_join_url": lec.live_join_url, "min_watch_pct": lec.min_watch_pct}  # fmt: skip
+                    "live_join_url": lec.live_join_url, "min_watch_pct": lec.min_watch_pct,
+                    "prerequisite_key": lec.prerequisite_key}  # fmt: skip
             item["resources"] = [
                 resources.payload(r) for r in sorted(lec.resources.all(), key=lambda r: r.position)
             ]
@@ -962,8 +965,11 @@ def dashboard(request):
 # ---------------------------------------------------------------- revenue & payouts
 @router.get("/revenue", response=StudioRevenueOut)
 def my_revenue(request):
+    own = payouts.instructor_fees([request.user.id]).get(request.user.id)
+    fee = own if own is not None else payouts.default_fee_bps()
     return {"balance": revenue.balance(user_id=request.user.id), "by_month": revenue.by_month(user_id=request.user.id),
-            "by_course": list(revenue.by_course(user_id=request.user.id)[:100])}  # fmt: skip
+            "by_course": list(revenue.by_course(user_id=request.user.id)[:100]),
+            "platform_fee_pct": round(fee / 100, 2), "fee_is_custom": own is not None}  # fmt: skip
 
 
 @router.get("/payouts", response=list[StudioPayoutOut])

@@ -42,6 +42,9 @@ class PlayerLecture(Schema):
     duration_sec: int
     completed: bool
     position_sec: int
+    locked: bool = False  # the prerequisite lesson isn't finished yet
+    prerequisite_key: UUID | None = None
+    prerequisite_title: str | None = None
 
 
 class PlayerSection(Schema):

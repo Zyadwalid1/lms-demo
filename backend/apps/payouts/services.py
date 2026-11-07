@@ -33,6 +33,46 @@ def _rates() -> dict[str, int]:
     return dict(RevenueShare.objects.values_list("channel", "instructor_bps"))
 
 
+# ---------------------------------------------------------------- platform fee (basic, set by staff)
+def default_fee_bps() -> int:
+    """The platform's default cut of a marketplace sale (the marketplace channel's rest)."""
+    share = (
+        RevenueShare.objects.filter(channel=C.MARKETPLACE).values_list("instructor_bps", flat=True).first()
+    )
+    return 10000 - (share if share is not None else 10000)
+
+
+def instructor_fees(user_ids) -> dict:
+    """{user_id: platform fee bps} for instructors with their own fee (others use the default)."""
+    from apps.identity.models import InstructorProfile
+
+    return dict(
+        InstructorProfile.objects.filter(user_id__in=user_ids, platform_fee_bps__isnull=False).values_list(
+            "user_id", "platform_fee_bps"
+        )
+    )
+
+
+def set_default_fee(*, fee_bps: int) -> None:
+    """Changes the default for instructors approved FROM NOW ON (and anyone without a fee of
+    their own). Instructors already approved keep the fee they were given."""
+    if not 0 <= fee_bps <= 10000:
+        raise ServiceError("bad_fee", "The fee must be between 0% and 100%.")
+    RevenueShare.objects.update_or_create(channel=C.MARKETPLACE, defaults={"instructor_bps": 10000 - fee_bps})
+
+
+def set_instructor_fee(*, user_id, fee_bps: int | None) -> None:
+    """One instructor's own fee; None = follow the platform default."""
+    from apps.identity.models import InstructorProfile
+
+    if fee_bps is not None and not 0 <= fee_bps <= 10000:
+        raise ServiceError("bad_fee", "The fee must be between 0% and 100%.")
+    if not InstructorProfile.objects.filter(user_id=user_id).update(
+        platform_fee_bps=fee_bps, updated_at=timezone.now()
+    ):
+        raise ServiceError("not_found", "Instructor not found.", status=404)
+
+
 def _weights(course_ids) -> dict:
     """{course_id: [(user_id, weight 0..1)]}; equal split when no shares are set."""
     links: dict = {}
@@ -60,6 +100,7 @@ def record_sale(order_id) -> int:
         if not items:
             return 0
         rates, weights = _rates(), _weights([i.course_id for i in items])
+        fees = instructor_fees({u for ws in weights.values() for u, _ in ws})
         available = order.paid_at + timedelta(days=settings.REFUND_WINDOW_DAYS)
         lines = []
         for item in items:
@@ -68,6 +109,11 @@ def record_sale(order_id) -> int:
             channel = C.INSTRUCTOR_COUPON if own_coupon else C.MARKETPLACE
             for user_id, w in instructors:
                 gross = int(item.gbp_gross_minor * w)
+                # an instructor's own fee replaces the default on marketplace sales; the rate is
+                # stored on the line, so later fee changes never rewrite past earnings
+                bps = (
+                    10000 - fees[user_id] if channel == C.MARKETPLACE and user_id in fees else rates[channel]
+                )
                 lines.append(
                     Earning(
                         user_id=user_id,
@@ -76,8 +122,8 @@ def record_sale(order_id) -> int:
                         order_item=item,
                         channel=channel,
                         gross_gbp_minor=gross,
-                        share_bps=rates[channel],
-                        amount_gbp_minor=gross * rates[channel] // 10000,
+                        share_bps=bps,
+                        amount_gbp_minor=gross * bps // 10000,
                         earned_at=order.paid_at,
                         available_at=available,
                     )  # fmt: skip

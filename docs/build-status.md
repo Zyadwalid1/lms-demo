@@ -10,11 +10,17 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | M1 marketplace | Done |
 | M2 learning | Done |
 | M3 business | Done |
-| M4 studio, M5 console, M6 polish | To do |
+| M4 studio | Built (checkpoint, pushed). Its E2E, phone check and reviewer pass are moved to the final test round after M6 (user decision, 2026-11-07) |
+| M5 console, M6 polish | To do. M5 starts next |
+| Testing | **All browser testing happens after M6** (user decision): the E2E scripts for M4 to M6, the phone check, the reviewer and a full-site demo run. Backend tests are still written with each change |
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
 ## Migrations the user must run on Neon
 - `python manage.py migrate --database owner`: engagement **0005** (M2): inserts the "work_marked" notification wording. Adds only.
+- Same command, **on dev and on e2e**, for two new columns (2026-11-07). Both add a nullable column only; no existing data changes. The app's table grants already cover new columns:
+  - catalog **0005** `lectures.prerequisite_key` (prerequisite lessons);
+  - identity **0002** `instructor_profiles.platform_fee_bps` (each instructor's platform fee).
+  Until they run, the studio, player and console pages that read these columns fail on Neon.
 
 ## Settings still needed
 - Azure storage account → Resource sharing (CORS) → Blob service: allow the frontend origin, methods PUT/GET/HEAD, headers `*`. Without it, browser file uploads fail (assignment hand-ins, and later studio files).
@@ -32,6 +38,71 @@ Local Stripe webhooks: `stripe listen --forward-to localhost:8000/api/v1/commerc
 
 ---
 
+## Basic payouts with an admin-set fee (2026-11-07, user decision; closes NEEDS-USER 2)
+The user asked for something simple and flexible for the demo:
+- **Default fee for new instructors.** Staff set the platform's cut of a marketplace sale (for example 20%). `GET/PUT /console/platform-fee` stores it as the marketplace row of `payouts.revenue_shares` (`instructor_bps = 10000 - fee`), so there is one source of truth.
+- **Kept on approval.** Approving an instructor (`POST /console/instructors/{id}/decision`) copies the default at that moment into `instructor_profiles.platform_fee_bps`. Changing the default later only affects instructors approved after the change (and anyone with no fee of their own).
+- **Per-instructor fee.** `PUT /console/instructors/{id}/fee` with `{"fee_pct": 12.5}` sets a custom fee; `{"fee_pct": null}` returns them to the default. `GET /console/instructors` shows `platform_fee_pct` and `fee_is_custom`. Every change is audited.
+- **Where it applies.** `payouts.services.record_sale` uses the instructor's own fee for marketplace sales. Sales through the instructor's own coupon (97%) and the subscription pool (25%) keep their channel rates. Each earning line stores the rate it was made at (`share_bps`), so changing a fee never rewrites past earnings.
+- **Instructor view.** `GET /studio/revenue` returns `platform_fee_pct` and `fee_is_custom`. The Sales & earnings page says "You keep X% of each marketplace sale".
+- The console screens for these settings are built in M5 (P4 Instructors, money settings). The API is ready and tested.
+- Not built (out of scope by the user's choice): a payout request button, payout schedule settings, more than one payout method, and Stripe Connect onboarding. The monthly bundle, £25 minimum and 30-day hold stay as they are (client question 2).
+- Tests: `apps/payouts/tests/test_payouts.py::test_instructor_fee_replaces_default_on_marketplace_only`, and the fee steps in `core/tests/test_api_console.py`.
+
+## Prerequisite lessons (2026-11-07, user request; closes NEEDS-USER 3)
+**What it does.** An instructor can make a lesson require another lesson first ("Require students to complete another lesson first" in mockup 12). The learner can't open the locked lesson until the earlier one is complete.
+
+**Rules**
+- Data: `catalog.lectures.prerequisite_key` (nullable UUID). It points to the other lesson's `lecture_key`, not its id, because keys stay the same across course versions (new drafts copy the field).
+- When the instructor sets it (`PATCH /studio/lectures/{id}` with `prerequisite_key`, or `null` to remove it), `services._check_prerequisite` rejects:
+  - the lesson itself;
+  - a lesson from another course or version;
+  - a lesson that comes later in the course order (module position, then lesson position).
+  The error code is `bad_prerequisite`.
+- Lessons can be moved or deleted after the prerequisite is set. If the prerequisite is then missing or comes after the lesson, the **publish checklist** shows "Lesson 'X' needs a prerequisite that comes before it." and blocks submitting.
+- Learner side (`apps/learning/api.py::_check_unlocked`, run inside `_lecture`): the lesson content, heartbeat, mark complete, quiz start, assignment hand-in and upload, file downloads and new notes all answer **403 `locked`, "Finish “X” first."** until the prerequisite has a completed progress row. If the prerequisite is missing from the live version, nothing is locked (fail-open, so learners are never stuck).
+- The player outline (`GET /learning/enrollments/{id}`) gives each lesson `locked`, `prerequisite_key` and `prerequisite_title`, using the same rule with no extra queries.
+
+**UI**
+- Studio, Lesson settings card: a "Prerequisite lesson" switch. When it's on, a list of the lessons before this one (numbered `1.2 Title`), with the previous lesson chosen by default. A broken prerequisite is shown as "Missing lesson" with an error.
+- Player: a lock icon and "Finish “X” first" in the course outline. Opening a locked lesson shows a locked screen with a button to go to the prerequisite. The page never asks the server for a locked lesson. "Resume" skips locked lessons.
+
+**Tests:** `core/tests/test_api_studio.py::PrerequisiteTest`, covering the studio rules, the checklist after a reorder, the 403 lock, unlocking after completion, and the outline flags.
+
+## M4 change log (everything changed since M3, for the planner's review)
+Checkpoint commit `bff6820`, then the payouts and prerequisite work above.
+- **Studio screens:** teach/apply; dashboard; my courses; the course builder:
+  - Details: outcomes, requirements, rich-text description;
+  - Curriculum: the mockup-12 inline editor;
+  - Pricing, Coupons and Publish (checklist, submit, versions).
+  Also: students, marking (files, rubric scores, essay prompts), Q&A, reviews and announcements, revenue, payouts. New artwork: `storyboard` and `coins`.
+- **Studio API (all typed, in `studio_schemas.py`):**
+  - dashboard;
+  - instructor status on `/identity/me`;
+  - submission file download;
+  - draft status on course rows;
+  - video details, parts, key moments, thumbnail, subtitles and fetch-by-link;
+  - the editor tree carries the video's file name and size, and `prerequisite_key`.
+- **Bunny:**
+  - connect timeout and one retry; network errors return 503 (they used to be 500s);
+  - status poll fallback when webhooks can't reach a laptop;
+  - the publish checklist refreshes unfinished videos;
+  - reapplying after rejection resets the application to pending.
+- **Stripe:** the thank-you page asks Stripe for the Checkout Session when the webhook hasn't arrived (rate-limited, same checks as the webhook). The page no longer waits for ever: it shows a slow state and a retry button.
+- **Learner:**
+  - video parts and key moments listed under the video, and clicking one seeks the player;
+  - notes capture the current second, which can be edited (`PATCH /learning/notes/{id}`), and clicking the time seeks the video;
+  - prerequisite locks.
+- **Fixes:**
+  - feedback showed `<p>` tags: the learner views now render rich text safely (`RichOrText`);
+  - `core.html.plain` stored `&amp;`: it now unescapes. Old dev rows are left as they are;
+  - learner answers were rendered as HTML on the marking screen (XSS risk): now plain text;
+  - the Swagger docs page lacked CSRF;
+  - sign-up with an existing email now shows a safe hint (no account probing);
+  - the contract test reads files as UTF-8.
+- **Payouts:** basic fee settings (see above).
+- **Migrations to apply:** catalog 0005, identity 0002 (see the top of this file).
+
 ## Extra (agreed with the user, 2026-11-07): video parts, notes moments, thumbnails (built)
 Built 2026-11-07, waiting for the user's manual test.
 - API: `GET studio/media/{id}/details`, `PUT studio/media/{id}/parts`, `PUT studio/media/{id}/thumbnail`; learner lecture content has `parts` and `moments` (from Bunny, cached 10 min, refreshed on save); `PATCH learning/notes/{id}` (time, clear time, text). Tests in test_api_studio / test_api_learner.
@@ -48,7 +119,7 @@ Keep Bunny's player (no custom player, no hls.js).
 ## Curriculum redesign to mockup 12 (2026-11-07, user request)
 - The drawer is replaced by an inline editor: course content tree on the right (modules, drag + menu reorder, Add module, Bulk upload, tips), lesson editor in the centre (type list, video source upload / external link, file row, processed versions, subtitles, parts/moments/thumbnail), Lesson settings card (free preview, duration hh:mm:ss, completion %, required, Cancel / Save lesson). `?lesson=<id>` in the URL; phones show the list first.
 - API (typed, tested): `POST studio/media/videos/fetch` (Bunny fetches a direct file link; found again by a marker title, since Bunny's fetch returns no id), `POST/DELETE studio/media/{id}/captions` (.srt/.vtt up to 1 MB: **the one upload that passes through Django, approved by the user**, forwarded to Bunny, never stored), details add `resolutions` and `captions`, the editor tree's video adds `filename` and `size_bytes`.
-- Not built: prerequisite lesson (needs a migration, NEEDS-USER 3); no autosave claim.
+- Prerequisite lesson: built later the same day (section above). No autosave claim.
 - Also fixed today: learner feedback showed `<p>` tags; `core.html.plain` stored `&amp;` (now stores the text); learner answers were rendered as HTML on the marking screen (stored-XSS risk, now plain text); course description uses the rich-text editor.
 
 ## M3 business (done)
@@ -166,7 +237,12 @@ Keep Bunny's player (no custom player, no hls.js).
 - Import icons one by one (the whole lucide set is ~800 KB).
 
 ## Next
-1. M3 business: done (planner review welcome).
-2. M4 studio, including marking assignments (the backend `grade_submission` exists; learners are notified) and replying to Q&A and reviews.
-3. M5 console, M6 polish (check the main bundle size: ~520 KB minified / 160 KB gzipped).
+1. M5 console, starting fresh. It includes the console screens for the platform fee (default and per instructor).
+2. M6 polish (check the main bundle size: ~520 KB minified / 160 KB gzipped).
+3. **Final test round after M6** (user decision):
+   - the full backend suite. The stopped run on 2026-11-07 had two unidentified errors, around tests #30 and #97: find them;
+   - the E2E scripts for M4, M5, M6 and the demo, plus every earlier one;
+   - the phone check on every route, in light and dark;
+   - the reviewer over the whole branch;
+   - a click-through of the whole demo.
 4. Deployment.

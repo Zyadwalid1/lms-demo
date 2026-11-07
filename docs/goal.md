@@ -32,11 +32,12 @@ The user deletes `NEEDS-USER.md` once they've answered.
 
 ## Checklist
 - [x] M3 business workspace (`docs/milestones/M3-business.md`)
-- [ ] M4 instructor studio (`docs/milestones/M4-studio.md`)
+- [x] M4 instructor studio (`docs/milestones/M4-studio.md`): built and pushed. **User decision (2026-11-07):** its E2E script, phone check and reviewer pass move to the final regression below.
 - [ ] M5 admin console (`docs/milestones/M5-console.md`)
 - [ ] M6 polish, performance and demo readiness (`docs/milestones/M6-polish.md`)
-- [ ] Final regression:
-  - full backend suite;
+- [ ] Final regression. **All browser testing is done here, after M6** (user decision, 2026-11-07); while building M5 and M6, write backend tests and run the targeted ones only:
+  - full backend suite (find the two unidentified errors from the stopped 2026-11-07 run);
+  - the E2E scripts for M4, M5 and M6 (written now, not earlier);
   - every E2E script (M1-M6 + demo);
   - the phone check on every route in light and dark;
   - `reviewer` over the whole branch.

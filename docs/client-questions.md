@@ -6,7 +6,7 @@ questions here, never decide them in code.
 
 | # | Topic | What the demo does now | Decide |
 |---|---|---|---|
-| 1 | Revenue shares | 37% marketplace / 97% instructor-coupon sales / 25% subscription pool to instructors | Final percentages |
+| 1 | Revenue shares | Staff set the platform fee in the console: a default for new instructors (kept on approval) and a custom fee per instructor, for marketplace sales. Instructor-coupon sales (97%) and the subscription pool (25%) are fixed. Seeded default: 63% fee (37% to the instructor) | Final default fee; whether coupon and pool rates should also be per instructor |
 | 2 | Instructor payouts | £25 minimum, monthly, 30-day hold | Minimum, frequency, hold |
 | 3 | Refunds | 30-day window, instant self-service (the approved mockup said admin-reviewed) | Instant or reviewed |
 | 4 | Tax | Prices shown tax-inclusive | Turn on Stripe Tax / VAT? |
