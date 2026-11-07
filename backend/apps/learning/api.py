@@ -452,11 +452,14 @@ def certificate(request, certificate_id: str):
 def certificate_pdf(request, certificate_id: str):
     from django.http import HttpResponse
 
+    from apps.catalog.certificates import template_for
+
     from .certificate_pdf import render
 
-    cert = get_object_or_404(Certificate.objects.select_related("template"), pk=certificate_id, user=request.user,
-                             revoked_at__isnull=True)  # fmt: skip
-    response = HttpResponse(render(cert, cert.template), content_type="application/pdf")
+    cert = get_object_or_404(Certificate.objects.select_related("template", "course"), pk=certificate_id,
+                             user=request.user, revoked_at__isnull=True)  # fmt: skip
+    template = template_for(cert.course) or cert.template  # the course's current design
+    response = HttpResponse(render(cert, template), content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="certificate-{cert.verification_code}.pdf"'
     response["Cache-Control"] = "private, max-age=3600"
     return response
@@ -470,4 +473,5 @@ def verify(request, code: str):
     row = services.verify_certificate(code.upper())
     if row is None:
         raise ServiceError("not_found", "Certificate not found.", status=404)
+    row["is_expired"] = bool(row["expires_at"] and row["expires_at"] <= timezone.now())
     return row

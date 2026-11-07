@@ -287,3 +287,5 @@ class VerifyOut(Schema):
     cpd_hours: float | None
     issued_at: datetime
     is_revoked: bool
+    expires_at: datetime | None = None
+    is_expired: bool = False
