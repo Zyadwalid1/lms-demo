@@ -112,9 +112,9 @@ export function MatrixPage() {
 
         <Card className="p-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))]">
-            <Input type="search" icon={<Search />} placeholder="Search by name, email or staff number" aria-label="Search people" value={text} onChange={(e) => setText(e.target.value)} />
+            <Input type="search" icon={<Search />} placeholder="Search people" aria-label="Search people" value={text} onChange={(e) => setText(e.target.value)} />
             <NativeSelect aria-label="Location or team" value={filters.unit ?? ''} onChange={(e) => set('unit', e.target.value)}>
-              <option value="">All locations and teams</option>
+              <option value="">All locations</option>
               {units.data?.map((u) => (
                 <option key={u.id} value={u.id}>
                   {unitLabel(u, units.data!)}

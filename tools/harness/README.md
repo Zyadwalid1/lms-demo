@@ -50,5 +50,7 @@ only do it when nothing else is running).
 | `e2e_grade.py` | Instructor marks the learner's latest submission (until M4 has the screen) |
 | `invite.log` | Written by `e2e_wsgi.py`: `email<TAB>token` for every invite the harness sends, since the real mail backend never logs the token |
 | `e2e_m1.js`, `e2e_m2.js` | Milestone scripts; add `e2e_m3.js` etc. in the same style |
-| `phone_check.js` | Overflow check on a phone plus light/dark screenshots, for any routes |
+| `phone_check.js` | Overflow check on a phone plus light/dark screenshots, for any routes (`E2E_DEMO_ORG` switches company first) |
+| `phone_business.js` | `phone_check.js` over every business route as the admin of a fresh `e2e_org.py` company (no demo password) |
+| `stop.py` | Stops the harness (processes on :8000/:5173 and the harness Celery worker) so `serve.py` picks up new code |
 | `lib.js` | Shared paths, Python runner, e2e database env |

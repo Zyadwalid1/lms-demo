@@ -307,7 +307,7 @@ function Detail({ unit, units, admin, onAction }: { unit: Unit; units: Unit[]; a
 
   return (
     <Card key={unit.id} className="animate-reveal">
-      <CardBody className="grid gap-5">
+      <CardBody className="grid grid-cols-[minmax(0,1fr)] gap-5">
         <div className="flex items-start gap-3">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-soft-text">
             <Icon className="size-5" />
@@ -343,7 +343,7 @@ function Detail({ unit, units, admin, onAction }: { unit: Unit; units: Unit[]; a
               <div className="animate-reveal">
                 <p className="mt-1 text-2xl font-semibold tabular">{stats.pct.toFixed(0)}%</p>
                 <Progress value={stats.pct} tone={complianceTone(stats.pct)} className="mt-1.5" label={`${unit.name} compliance`} />
-                <p className="mt-1 text-[11px] text-subtle">{stats.late ? `${stats.late} overdue or expired` : 'all in date'}, including units below</p>
+                <p className="mt-1 text-[11px] text-subtle">{stats.late ? `${stats.late} overdue or expired` : 'nothing overdue'}, including units below</p>
               </div>
             ) : (
               <p className="mt-1 text-sm text-muted">No required training here yet</p>
@@ -550,7 +550,7 @@ export function UnitsPage() {
   return (
     <>
       <PageHeader title="Locations & teams" description={admin ? 'How your company is organised: regions, sites, departments and teams.' : 'The units you manage and the units below them.'} />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <Card className="self-start">
           <CardHeader title={admin ? 'Structure' : 'Your units'} description={units ? `${units.length} ${units.length === 1 ? 'unit' : 'units'}` : undefined} />
           <div className="mt-2">{body}</div>

@@ -2,14 +2,14 @@
 
 Maintained by Claude Code (`/status`) and read by the planner session. Newest milestone first.
 
-## Where things stand (2026-11-06)
+## Where things stand (2026-11-07)
 | Area | State |
 |---|---|
-| Backend | Complete for the demo: 102 tests, ruff clean. All learner/business/studio/console APIs exist. |
+| Backend | Complete for the demo: 103 tests, ruff clean. All learner/business/studio/console APIs exist. |
 | M0 foundation | Done: design system (`/design`), layouts, sign-in, workspace switcher, home, course page, My learning, HR compliance overview |
 | M1 marketplace | Done |
 | M2 learning | Done |
-| M3 business | **In progress**: API typed; screens being built (see M3 below) |
+| M3 business | Done |
 | M4 studio, M5 console, M6 polish | To do |
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
@@ -32,17 +32,44 @@ Local Stripe webhooks: `stripe listen --forward-to localhost:8000/api/v1/commerc
 
 ---
 
-## M3 business (in progress)
-- **P1 done:** every `/api/v1/org/` and `/api/v1/compliance/` endpoint is typed (both prefixes in `TYPED_PREFIXES`; `export.csv` in `NOT_JSON`). Additive: `compliance/people/{id}` now returns `units`, `job_roles`, and `requirement_id` on records/exemptions; `org/invitations/{token}` returns `role`. Tests added; ruff clean. No new migrations.
-- **Frontend groundwork:** `lib/page-art.ts` (route `handle: { art }` now works in workspace areas too); the workspace header search is real (business: goes to `/business/people?q=`), and hidden where an area has no search; `BusinessLayout`; shared org hooks in `features/org/api.ts`; all business routes + `/invite/:token` in the router.
-- **Type generation without a running server:** `tools/dump_openapi.py` writes the schema, then `openapi-typescript ../logs/openapi.json` (see `/sync-types`).
-- **E2E fixture:** `tools/harness/e2e_org.py` builds a fresh company (admin, units, learners, courses, requirement), so M3 E2E needs no demo password.
-- **Screens built (P2–P10):** matrix (+ person/requirement sheet with Extend, Exempt/Revoke, Record, Void, Remind), requirements (sheet form, archive), reports (by requirement, by unit, audit trail, CSV), people + person page, locations & teams (tree, managers, job roles), invitations + public `/invite/:token`, library + 3-step assign, billing, settings with runtime branding (sidebar accent + header logo; tokens untouched). New artwork: `chartgrid`, `orgchart`, `floorplan`.
-- **More additive API (with tests):** `people_overdue` on the dashboard; `manager_ids` on units; person history keeps revoked exemptions (`revoked_at`) and `void_reason`; `dry_run` on `org/assign` (exact count for the confirm step).
-- **Reviewer findings fixed (backend):** managers got the whole company's unit tree (now only their units); archived requirements' cells leaked into the matrix (status filter and phone "worst status"); matrix and people lists were in UUID order (now alphabetical, keyset on name + id); person view and assignments added to the query-budget test.
-- **Invite flow:** "Create an account" remembers the invite; after email confirmation the verify page offers "Continue to your invitation".
-- **Harness:** `e2e_wsgi.py` records `email<TAB>token` in `invite.log` when the API enqueues the invite email (the token is never stored or logged by the app); `e2e_verify_key.py` recomputes allauth's HMAC confirmation key.
-- **Lesson:** never run two Django test processes at once against Neon: they share the `test_*` database and fail with deadlocks/duplicate keys.
+## M3 business (done)
+- **Screens (all `/business/*` placeholders replaced):**
+  - training matrix: KPI strip, URL filters (`unit`, `role`, `status`, `req`, `q`), sticky header/column, keyset "Load more", legend; cell → side sheet with the person's requirement: Extend, Exempt / Revoke, Record completion, Void, Send reminder, history timeline; phone = list of people by worst status;
+  - requirements: compliance ring, targets as chips, sheet form (Course, Schedule, Reminders, Who it applies to), archive with confirmation; read-only for managers;
+  - reports: by requirement, by location, audit trail (admins), CSV export with unit filter;
+  - people (KPIs, filters, keyset) and person page (Profile / Training tabs, role and unit edits, remove with confirmation);
+  - locations & teams: tree with per-node actions, managers picker, job roles;
+  - invitations (single or bulk) and the public `/invite/:token` page (expired/used, wrong account, sign up → confirm email → back to the invite → accept → company workspace);
+  - course library (assigned/completed, progress sheet) and 3-step assign with an exact count;
+  - billing (plan, seats, portal, buy seats via the M1 team-plan flow) and company settings with live branding preview.
+- **Runtime branding:** company colours tint the sidebar's active item and the header (CSS variables on the layout root and the phone drawer only; tokens untouched; text colour picked for contrast). Logo shown when it is an https link.
+- **Layout:** `lib/page-art.ts` lets any workspace route pick its artwork (`handle: { art }`); the header search is real (business → `/business/people?q=`) and hidden where an area has none. New artwork: `chartgrid` (reports), `orgchart` (people, invites), `floorplan` (units).
+- **API (all additive, typed, tested; no migrations):**
+  - every `/api/v1/org/` and `/api/v1/compliance/` endpoint is typed (both in `TYPED_PREFIXES`; `export.csv` in `NOT_JSON`);
+  - person view: `units`, `job_roles`, `requirement_id` on records/exemptions, `void_reason`, revoked exemptions kept as history (`revoked_at`);
+  - `org/invitations/{token}` returns `role`; units return `manager_ids`; dashboard returns `people_overdue`; `org/assign` accepts `dry_run`.
+- **Bugs found and fixed:**
+  - managers received the whole company's unit tree (now only their own units);
+  - archived requirements' cells leaked into the matrix (status filter, phone worst status);
+  - people and matrix lists were in UUID order (now alphabetical: keyset on name + id);
+  - the header search box did nothing;
+  - unit detail claimed "no training" for sites/teams (now per-unit summary);
+  - removing a person flashed an error page; admins were offered "remove yourself";
+  - role badges stayed stale after assigning managers; invite redirect used the invited role instead of the real one; a dead pending invite could be offered after email confirmation;
+  - CSV download could be cancelled in Firefox/Safari; compliance actions waited for every list to refetch;
+  - unit pickers indented by company depth for managers; custom radio groups had no arrow-key support;
+  - `/business/units` overflowed on phones (implicit grid column);
+  - `serve.py` never started the Celery worker when `REDIS_URL` lives in `backend/.env` (requirement statuses never computed in E2E);
+  - a killed test run left rows in the reused test database (the test base now truncates once at the start of each run).
+- **Verified:**
+  - backend: full suite 103 tests OK (32 min on Neon), ruff clean, `makemigrations --check` clean, query budgets now cover the person view and assignments;
+  - `tsc -b` and `vite build` pass; main chunk 384 KB (115 KB gzip), unchanged;
+  - `tools/harness/e2e_m3.js`: 21 steps covering acceptance 1–10 (admin, manager and learner, invite sign-up with real email confirmation, CSV header, audit, billing, branding, phone); `e2e_m1.js` and `e2e_m2.js` re-run green;
+  - phone overflow + light/dark screenshots on every business route and the invite page: `node tools/harness/phone_business.js shots/phone` (builds its own company, so no demo password is needed); screenshots checked against the specs and mockups 26/05/33.
+- **Reviewer:** run on the whole M3 change; all 16 findings fixed (listed above).
+- **Harness additions:** `e2e_org.py` (fresh company), `e2e_wsgi.py` records `email<TAB>token` in `invite.log` when the API enqueues an invite (the app never stores or logs the token), `e2e_verify_key.py` (allauth's HMAC confirmation key), `stop.py` (stops the harness processes), `phone_business.js`; `phone_check.js` can switch company (`E2E_DEMO_ORG`).
+- **Type generation without a running server:** `tools/dump_openapi.py` writes `logs/openapi.json`; then `npx openapi-typescript ../logs/openapi.json -o src/api/schema.d.ts` in `frontend/`.
+- **Lessons:** never run two Django test processes at once against Neon (shared `test_*` database: deadlocks, duplicate keys); Django 5.2 calls `_fixture_setup` at class level, so hook `setUpClass`.
 
 ## M2 learning (done)
 - **Player** `/learn/:slug/lecture/:key`; `/learn/:slug` resumes; `/learn/:slug/qa/:id` and `/announcements/:id` are notification links.
@@ -120,7 +147,7 @@ Local Stripe webhooks: `stripe listen --forward-to localhost:8000/api/v1/commerc
 - Import icons one by one (the whole lucide set is ~800 KB).
 
 ## Next
-1. M3 business (brief ready).
+1. M3 business: done (planner review welcome).
 2. M4 studio, including marking assignments (the backend `grade_submission` exists; learners are notified) and replying to Q&A and reviews.
 3. M5 console, M6 polish (check the main bundle size: ~520 KB minified / 160 KB gzipped).
 4. Deployment.

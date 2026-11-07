@@ -31,7 +31,7 @@ The user deletes `NEEDS-USER.md` once they've answered.
 **Context:** auto-compaction runs at 40% of the context. After a compaction you're reminded of this file. Keep notes that matter in `docs/build-status.md`, not only in the conversation.
 
 ## Checklist
-- [ ] M3 business workspace (`docs/milestones/M3-business.md`)
+- [x] M3 business workspace (`docs/milestones/M3-business.md`)
 - [ ] M4 instructor studio (`docs/milestones/M4-studio.md`)
 - [ ] M5 admin console (`docs/milestones/M5-console.md`)
 - [ ] M6 polish, performance and demo readiness (`docs/milestones/M6-polish.md`)
