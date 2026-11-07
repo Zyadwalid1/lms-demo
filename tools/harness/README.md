@@ -45,7 +45,10 @@ only do it when nothing else is running).
 | `e2e_stripe.py` | Delivers a checkout/subscription webhook through the real handler |
 | `e2e_user.py` | Creates a fresh verified learner |
 | `e2e_course.py` | Creates a free course with one lecture of every kind (via the real services) |
+| `e2e_org.py` | Creates a fresh company (admin, units, job role, 3 learners, 2 company courses, 1 requirement) for M3 |
+| `e2e_verify_key.py` | The real allauth email-confirmation key for an address, for the M3 invite flow (see `e2e_wsgi.py`) |
 | `e2e_grade.py` | Instructor marks the learner's latest submission (until M4 has the screen) |
+| `invite.log` | Written by `e2e_wsgi.py`: `email<TAB>token` for every invite the harness sends, since the real mail backend never logs the token |
 | `e2e_m1.js`, `e2e_m2.js` | Milestone scripts; add `e2e_m3.js` etc. in the same style |
 | `phone_check.js` | Overflow check on a phone plus light/dark screenshots, for any routes |
 | `lib.js` | Shared paths, Python runner, e2e database env |

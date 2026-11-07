@@ -9,7 +9,7 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | M0 foundation | Done: design system (`/design`), layouts, sign-in, workspace switcher, home, course page, My learning, HR compliance overview |
 | M1 marketplace | Done |
 | M2 learning | Done |
-| M3 business | **Next**: `docs/milestones/M3-business.md` |
+| M3 business | **In progress**: API typed; screens being built (see M3 below) |
 | M4 studio, M5 console, M6 polish | To do |
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
@@ -31,6 +31,18 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 Local Stripe webhooks: `stripe listen --forward-to localhost:8000/api/v1/commerce/webhooks/stripe --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.expired,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.paid`
 
 ---
+
+## M3 business (in progress)
+- **P1 done:** every `/api/v1/org/` and `/api/v1/compliance/` endpoint is typed (both prefixes in `TYPED_PREFIXES`; `export.csv` in `NOT_JSON`). Additive: `compliance/people/{id}` now returns `units`, `job_roles`, and `requirement_id` on records/exemptions; `org/invitations/{token}` returns `role`. Tests added; ruff clean. No new migrations.
+- **Frontend groundwork:** `lib/page-art.ts` (route `handle: { art }` now works in workspace areas too); the workspace header search is real (business: goes to `/business/people?q=`), and hidden where an area has no search; `BusinessLayout`; shared org hooks in `features/org/api.ts`; all business routes + `/invite/:token` in the router.
+- **Type generation without a running server:** `tools/dump_openapi.py` writes the schema, then `openapi-typescript ../logs/openapi.json` (see `/sync-types`).
+- **E2E fixture:** `tools/harness/e2e_org.py` builds a fresh company (admin, units, learners, courses, requirement), so M3 E2E needs no demo password.
+- **Screens built (P2–P10):** matrix (+ person/requirement sheet with Extend, Exempt/Revoke, Record, Void, Remind), requirements (sheet form, archive), reports (by requirement, by unit, audit trail, CSV), people + person page, locations & teams (tree, managers, job roles), invitations + public `/invite/:token`, library + 3-step assign, billing, settings with runtime branding (sidebar accent + header logo; tokens untouched). New artwork: `chartgrid`, `orgchart`, `floorplan`.
+- **More additive API (with tests):** `people_overdue` on the dashboard; `manager_ids` on units; person history keeps revoked exemptions (`revoked_at`) and `void_reason`; `dry_run` on `org/assign` (exact count for the confirm step).
+- **Reviewer findings fixed (backend):** managers got the whole company's unit tree (now only their units); archived requirements' cells leaked into the matrix (status filter and phone "worst status"); matrix and people lists were in UUID order (now alphabetical, keyset on name + id); person view and assignments added to the query-budget test.
+- **Invite flow:** "Create an account" remembers the invite; after email confirmation the verify page offers "Continue to your invitation".
+- **Harness:** `e2e_wsgi.py` records `email<TAB>token` in `invite.log` when the API enqueues the invite email (the token is never stored or logged by the app); `e2e_verify_key.py` recomputes allauth's HMAC confirmation key.
+- **Lesson:** never run two Django test processes at once against Neon: they share the `test_*` database and fail with deadlocks/duplicate keys.
 
 ## M2 learning (done)
 - **Player** `/learn/:slug/lecture/:key`; `/learn/:slug` resumes; `/learn/:slug/qa/:id` and `/announcements/:id` are notification links.

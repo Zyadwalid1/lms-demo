@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { ApiError, api, csrfToken, unwrap } from '@/api/client'
+import { forgetInvite } from '@/lib/next'
 
 const BASE = '/_allauth/browser/v1'
 
@@ -115,6 +116,8 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => call('DELETE', '/auth/session'),
     onSettled: () => {
+      // an invitation waiting in this browser belongs to whoever was signed in
+      forgetInvite()
       qc.clear()
       void qc.invalidateQueries()
     },

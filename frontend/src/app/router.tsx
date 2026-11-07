@@ -2,6 +2,7 @@ import { BarChart3, BookOpen, Building2, ClipboardCheck, CreditCard, DollarSign,
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Outlet } from 'react-router-dom'
 
+import { BusinessLayout } from '@/components/layout/BusinessLayout'
 import { LearnerLayout } from '@/components/layout/LearnerLayout'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { type NavSection, WorkspaceLayout } from '@/components/layout/WorkspaceLayout'
@@ -35,6 +36,18 @@ const SupportPage = named(() => import('@/pages/learner/SupportPages'), 'Support
 const TicketPage = named(() => import('@/pages/learner/SupportPages'), 'TicketPage')
 const VerifyPage = named(() => import('@/pages/VerifyPage'), 'VerifyPage')
 const ComplianceDashboard = named(() => import('@/pages/business/ComplianceDashboard'), 'ComplianceDashboard')
+const MatrixPage = named(() => import('@/pages/business/MatrixPage'), 'MatrixPage')
+const RequirementsPage = named(() => import('@/pages/business/RequirementsPage'), 'RequirementsPage')
+const ReportsPage = named(() => import('@/pages/business/ReportsPage'), 'ReportsPage')
+const PeoplePage = named(() => import('@/pages/business/PeoplePage'), 'PeoplePage')
+const PersonPage = named(() => import('@/pages/business/PersonPage'), 'PersonPage')
+const UnitsPage = named(() => import('@/pages/business/UnitsPage'), 'UnitsPage')
+const InvitesPage = named(() => import('@/pages/business/InvitesPage'), 'InvitesPage')
+const LibraryPage = named(() => import('@/pages/business/LibraryPage'), 'LibraryPage')
+const AssignPage = named(() => import('@/pages/business/AssignPage'), 'AssignPage')
+const BillingPage = named(() => import('@/pages/business/BillingPage'), 'BillingPage')
+const CompanySettingsPage = named(() => import('@/pages/business/CompanySettingsPage'), 'CompanySettingsPage')
+const InvitePage = named(() => import('@/pages/InvitePage'), 'InvitePage')
 
 const page = (el: ReactNode) => <Suspense fallback={<PageSpinner />}>{el}</Suspense>
 const soon = (title: string, milestone: string) => <ComingSoon title={title} milestone={milestone} />
@@ -127,18 +140,30 @@ export const router = createBrowserRouter([
   { path: '/login', element: page(<LoginPage />) },
   { path: '/signup', element: page(<SignupPage />) },
   { path: '/account/verify-email/:key', element: page(<VerifyEmailPage />) },
+  { path: '/invite/:token', element: page(<InvitePage />) },
   {
     path: '/business',
     element: (
       <RequireAuth>
         <RequireManager>
-          <WorkspaceLayout area="Business" sections={businessNav} art="contours" />
+          <BusinessLayout sections={businessNav} />
         </RequireManager>
       </RequireAuth>
     ),
     children: [
       { index: true, element: page(<ComplianceDashboard />) },
-      { path: '*', element: soon('This business screen', 'M3 (business)') },
+      { path: 'matrix', element: page(<MatrixPage />) },
+      { path: 'requirements', element: page(<RequirementsPage />), handle: { art: 'checklist' } },
+      { path: 'reports', element: page(<ReportsPage />), handle: { art: 'chartgrid' } },
+      { path: 'people', element: page(<PeoplePage />), handle: { art: 'orgchart' } },
+      { path: 'people/:memberId', element: page(<PersonPage />), handle: { art: 'orgchart' } },
+      { path: 'units', element: page(<UnitsPage />), handle: { art: 'floorplan' } },
+      { path: 'invites', element: page(<InvitesPage />), handle: { art: 'orgchart' } },
+      { path: 'library', element: page(<LibraryPage />), handle: { art: 'mosaic' } },
+      { path: 'assign', element: page(<AssignPage />), handle: { art: 'mosaic' } },
+      { path: 'billing', element: page(<BillingPage />), handle: { art: 'ribbons' } },
+      { path: 'settings', element: page(<CompanySettingsPage />), handle: { art: 'dials' } },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
   {

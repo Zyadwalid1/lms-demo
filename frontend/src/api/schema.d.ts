@@ -128,7 +128,8 @@ export interface paths {
         };
         /**
          * Units
-         * @description The whole tree in 2 queries (managers see it too, to navigate their part).
+         * @description The tree in 2 queries: the whole company for admins, only the units they manage
+         *     (and everything below) for managers.
          */
         get: operations["apps_org_api_units"];
         put?: never;
@@ -3221,6 +3222,8 @@ export interface components {
             people: number;
             /** Managers */
             managers: string[];
+            /** Manager Ids */
+            manager_ids: string[];
         };
         /** UnitIn */
         UnitIn: {
@@ -3373,6 +3376,21 @@ export interface components {
             /** Job Role Id */
             job_role_id?: string | null;
         };
+        /** InvitationOut */
+        InvitationOut: {
+            /** Org Name */
+            org_name: string;
+            /** Role */
+            role: string;
+        };
+        /** InviteAcceptOut */
+        InviteAcceptOut: {
+            /**
+             * Org Id
+             * Format: uuid
+             */
+            org_id: string;
+        };
         /** LibraryCourse */
         LibraryCourse: {
             /**
@@ -3401,6 +3419,13 @@ export interface components {
             /** Completed */
             completed: number;
         };
+        /** AssignOut */
+        AssignOut: {
+            /** Enrolled */
+            enrolled: number;
+            /** Already Had It */
+            already_had_it: number;
+        };
         /** AssignIn */
         AssignIn: {
             /**
@@ -3412,6 +3437,36 @@ export interface components {
             member_ids?: string[];
             /** Unit Ids */
             unit_ids?: string[];
+            /**
+             * Dry Run
+             * @default false
+             */
+            dry_run: boolean;
+        };
+        /** AssignmentRow */
+        AssignmentRow: {
+            /**
+             * Enrollment Id
+             * Format: uuid
+             */
+            enrollment_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Status */
+            status: string;
+            /** Progress Pct */
+            progress_pct: number;
+            /**
+             * Enrolled At
+             * Format: date-time
+             */
+            enrolled_at: string;
+            /** Completed At */
+            completed_at: string | null;
+            /** Last Accessed At */
+            last_accessed_at: string | null;
         };
         /** AuditOut */
         AuditOut: {
@@ -4267,6 +4322,8 @@ export interface components {
             overdue: number;
             /** Expired */
             expired: number;
+            /** People Overdue */
+            people_overdue: number;
             /** Expiring 30 */
             expiring_30: number;
             /** Due 30 */
@@ -4351,13 +4408,21 @@ export interface components {
         /** MatrixOut */
         MatrixOut: {
             /** Requirements */
-            requirements: {
-                [key: string]: unknown;
-            }[];
+            requirements: components["schemas"]["MatrixRequirement"][];
             /** Rows */
             rows: components["schemas"]["MatrixRow"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** MatrixRequirement */
+        MatrixRequirement: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** MatrixRow */
         MatrixRow: {
@@ -4378,6 +4443,173 @@ export interface components {
             cells: {
                 [key: string]: components["schemas"]["Cell"];
             };
+        };
+        /** CompliancePersonOut */
+        CompliancePersonOut: {
+            /**
+             * Member Id
+             * Format: uuid
+             */
+            member_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Role */
+            role: string;
+            /** Job Title */
+            job_title: string;
+            /** Employee Ref */
+            employee_ref: string;
+            /**
+             * Joined At
+             * Format: date-time
+             */
+            joined_at: string;
+            /** Units */
+            units: components["schemas"]["NamedRef"][];
+            /** Job Roles */
+            job_roles: components["schemas"]["NamedRef"][];
+            /** Requirements */
+            requirements: components["schemas"]["PersonStatusOut"][];
+            /** Records */
+            records: components["schemas"]["PersonRecordOut"][];
+            /** Exemptions */
+            exemptions: components["schemas"]["PersonExemptionOut"][];
+            /** Courses */
+            courses: components["schemas"]["PersonCourseOut"][];
+            /** Certificates */
+            certificates: components["schemas"]["PersonCertificateOut"][];
+        };
+        /** NamedRef */
+        NamedRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** PersonCertificateOut */
+        PersonCertificateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Course Title */
+            course_title: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            /** Code */
+            code: string;
+        };
+        /** PersonCourseOut */
+        PersonCourseOut: {
+            /** Course Title */
+            course_title: string;
+            /** Status */
+            status: string;
+            /** Progress Pct */
+            progress_pct: number;
+            /**
+             * Enrolled At
+             * Format: date-time
+             */
+            enrolled_at: string;
+            /** Completed At */
+            completed_at: string | null;
+        };
+        /** PersonExemptionOut */
+        PersonExemptionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Requirement Id
+             * Format: uuid
+             */
+            requirement_id: string;
+            /** Requirement */
+            requirement: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Ends At */
+            ends_at: string | null;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Granted By */
+            granted_by: string;
+        };
+        /** PersonRecordOut */
+        PersonRecordOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Requirement Id
+             * Format: uuid
+             */
+            requirement_id: string;
+            /** Requirement */
+            requirement: string;
+            /** Source */
+            source: string;
+            /**
+             * Completed At
+             * Format: date-time
+             */
+            completed_at: string;
+            /** Expires At */
+            expires_at: string | null;
+            /** Note */
+            note: string;
+            /** Voided */
+            voided: boolean;
+            /** Void Reason */
+            void_reason: string;
+            /** Recorded By */
+            recorded_by: string | null;
+        };
+        /** PersonStatusOut */
+        PersonStatusOut: {
+            /**
+             * Status Id
+             * Format: uuid
+             */
+            status_id: string;
+            /**
+             * Requirement Id
+             * Format: uuid
+             */
+            requirement_id: string;
+            /** Name */
+            name: string;
+            /** Course Title */
+            course_title: string;
+            /** Status */
+            status: string;
+            /** Due At */
+            due_at: string | null;
+            /** Completed At */
+            completed_at: string | null;
+            /** Expires At */
+            expires_at: string | null;
+            /** Due Override At */
+            due_override_at: string | null;
         };
         /** RequirementOut */
         RequirementOut: {
@@ -4505,6 +4737,13 @@ export interface components {
             /** Targets */
             targets?: components["schemas"]["TargetIn"][] | null;
         };
+        /** ExtendOut */
+        ExtendOut: {
+            /** Status */
+            status: string;
+            /** Due At */
+            due_at: string | null;
+        };
         /** ExtendIn */
         ExtendIn: {
             /**
@@ -4513,12 +4752,28 @@ export interface components {
              */
             due_at: string;
         };
+        /** ExemptionCreatedOut */
+        ExemptionCreatedOut: {
+            /**
+             * Exemption Id
+             * Format: uuid
+             */
+            exemption_id: string;
+        };
         /** ExemptIn */
         ExemptIn: {
             /** Reason */
             reason: string;
             /** Ends At */
             ends_at?: string | null;
+        };
+        /** RecordCreatedOut */
+        RecordCreatedOut: {
+            /**
+             * Record Id
+             * Format: uuid
+             */
+            record_id: string;
         };
         /** ManualIn */
         ManualIn: {
@@ -4536,6 +4791,14 @@ export interface components {
         VoidIn: {
             /** Reason */
             reason: string;
+        };
+        /** ReminderOut */
+        ReminderOut: {
+            /**
+             * Reminder Id
+             * Format: uuid
+             */
+            reminder_id: string;
         };
         /** MyRequirement */
         MyRequirement: {
@@ -5880,7 +6143,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -5944,7 +6209,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -5968,7 +6235,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -5992,7 +6261,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -6056,7 +6327,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -6080,7 +6353,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -6127,7 +6402,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -6151,7 +6428,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -6215,7 +6494,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -6235,7 +6516,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["InvitationOut"];
+                };
             };
         };
     };
@@ -6255,7 +6538,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["InviteAcceptOut"];
+                };
             };
         };
     };
@@ -6300,7 +6585,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AssignOut"];
+                };
             };
         };
     };
@@ -6320,7 +6607,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AssignmentRow"][];
+                };
             };
         };
     };
@@ -6955,7 +7244,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CompliancePersonOut"];
+                };
             };
         };
     };
@@ -7019,7 +7310,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -7069,7 +7362,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ExtendOut"];
+                };
             };
         };
     };
@@ -7093,7 +7388,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ExemptionCreatedOut"];
+                };
             };
         };
     };
@@ -7113,7 +7410,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -7137,7 +7436,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RecordCreatedOut"];
+                };
             };
         };
     };
@@ -7161,7 +7462,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -7181,7 +7484,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReminderOut"];
+                };
             };
         };
     };

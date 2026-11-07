@@ -231,7 +231,7 @@ def invite_preview(token: str) -> dict | None:
             )  # fmt: skip
             .first()
         )
-        return {"org_name": inv.org.name, "email": inv.email} if inv else None
+        return {"org_name": inv.org.name, "email": inv.email, "role": inv.role} if inv else None
 
 
 @transaction.atomic
