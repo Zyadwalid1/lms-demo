@@ -2,7 +2,7 @@
 
 Maintained by Claude Code (`/status`) and read by the planner session. Newest milestone first.
 
-## Where things stand (2026-11-07)
+## Where things stand (2026-11-08)
 | Area | State |
 |---|---|
 | Backend | Complete for the demo: 103 tests, ruff clean. All learner/business/studio/console APIs exist. |
@@ -11,21 +11,50 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | M2 learning | Done |
 | M3 business | Done |
 | M4 studio | Built (checkpoint, pushed). Its E2E, phone check and reviewer pass are moved to the final test round after M6 (user decision, 2026-11-07) |
-| M5 console | In progress (see "M5 progress" below): P1, P3, P17 committed; P4–P16, P18, P19 partly built and uncommitted |
+| M5 console | Built: P1–P20 committed, every M5-gaps line ticked. Lean verification (section V); the full pass is deferred (below) |
 | M6 polish | To do |
 | Testing | **All browser testing happens after M6** (user decision): the E2E scripts for M4 to M6, the phone check, the reviewer and a full-site demo run. Backend tests are still written with each change |
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
-## M5 progress (2026-11-07, in progress)
-**Committed:** P1 contract/routes/nav/search/migrations (a9f6c65), P2 `seed_console_demo`, P3 dashboard (f22bb9e), P17 reports (22cde26).
-P2: `python manage.py seed_console_demo` (after `seed_demo`, on dev and e2e once the M5 migrations ran). Adds only; every row has a fixed marker, so a second run adds nothing (tested). Seeded learners have no password. It does not create instructor earnings for its orders.
-**Uncommitted in the working tree:** four parallel helpers were building P4/P5/P13 (approvals, courses,
-certificates), P7–P10 (sales, subscriptions, pricing, promotions), P6/P11/P12 (people, commissions, payouts +
-`/studio/payouts`) and P14–P16/P18/P19 (communications, moderation, companies, settings, audit). All four stopped
-at the account usage limit (resets 9 Nov). Their code is partly done and **not yet tested or reviewed**; resume
-each area, run its tests (`core/tests/test_console_<area>.py`, own `TEST_DB_NAME`), then commit per package.
-Helper-added migration so far: learning **0005_console_a_verify** (check it is additive before listing it).
-**Still to do:** P20 docs, `tools/harness/e2e_m5.js` (write, run later).
+## M5 console (2026-11-08, built; verification pass pending)
+Every control in mockups 26, 25, 45, 05, 22, 20, 13, 33, 30, 36, 18 and 02 is wired to the real API; no
+`ComingSoon` page is left. Packages, one commit each: P1 contract/routes/nav/search, P2 `seed_console_demo`,
+P3 dashboard, P4 approvals, P5 courses, P6 students and instructors, P7 sales, P8 subscriptions, P9 pricing,
+P10 promotions, P11 commissions, P12 payouts (+ `/studio/payouts`), P13 certificates, P14 communications,
+P15 moderation (+ learner Report), P16 companies, P17 reports, P18 settings (+ 2-step sign-in), P19 audit.
+Built by four parallel helpers by area plus the coordinator; every helper's suites were re-run by the
+coordinator before committing (B 36, D 31, A+C 69 tests: all OK).
+
+**Checks run (lean, section V):** backend tests per area (above), ruff, `makemigrations --check` clean,
+`tsc -b` and `vite build` pass. The main entry chunk grew 363 → 372 kB: the site-wide wrapper (`SiteRoot`:
+banner, maintenance page, branding) and the 2-step sign-in hooks load on every page by design.
+
+**Seeding:** `python manage.py seed_console_demo` after `seed_demo` (dev and e2e, after the migrations). Adds
+only; every row has a fixed marker, a second run adds nothing (tested). Seeded learners have no password; it
+does not create instructor earnings for its orders.
+
+**Bugs found and fixed while integrating**
+- Duplicate schema names across helpers (`ConsoleReportOut`, `ConsoleActivityOut`, `ConsoleCoursePriceIn`): renamed.
+- Price rule "Apply" crashed (`select_for_update` over a nullable join): it now locks the rule row only.
+- `/people/{user_id}` swallowed `/people/students` (405): account routes moved to `/people/accounts/…`.
+- Maintenance mode and cached settings leaked between tests: the test base now clears the cache after each test.
+- The seed duplicated rows on a re-run (shared random stream): each order now has its own stream.
+
+**Known limits (not hidden in the UI)**
+- 2-step setup shows the key and an "open in the app" link, not a QR code (a QR library is a new dependency: ask).
+- Settings > default currency is saved, but a visitor's first currency still comes from the commerce logic;
+  the language setting sets `<html lang>` only (the UI is English).
+- No list of pending instructor invitations (signed 7-day links, audited when sent). Client question 22.
+- Subscription promotions are redeemed through Stripe coupons, so their per-person limit is not counted.
+- Instructor certificate-template picker in the studio: the API exists, the studio screen does not (not in the brief).
+- `SchemaTransactionTestCase` does not restore the seeded `revenue_shares` rows; tests that change them reset them.
+
+**Staff bell:** applications, course and template submissions, tickets and replies, reported content, learner
+refunds, payout requests and due payouts, FX failures and red health tiles (once an hour per service).
+
+**E2E:** `tools/harness/e2e_m5.js` (acceptance 1–17) and the fixture `tools/harness/e2e_staff.py` are written,
+**not run**. Their labels come from the builders' reports; reconcile on the first red run. 2-step sign-in with a
+real TOTP code is a manual step in that pass.
 
 ### Verification pass M4 + M5 (deferred by the user, run later)
 Full backend suite, `e2e_m4.js`, `e2e_m5.js` (acceptance 1–17), M1–M3 E2E reruns, phone check on every console
@@ -37,7 +66,7 @@ route, light/dark screenshots vs mockups, reviewer agent.
   - catalog **0005** `lectures.prerequisite_key` (prerequisite lessons);
   - identity **0002** `instructor_profiles.platform_fee_bps` (each instructor's platform fee).
   Until they run, the studio, player and console pages that read these columns fail on Neon.
-- **M5 (dev and e2e, same command; adds tables, columns and rows only, checked with `sqlmigrate`):** catalog **0006_console**, learning **0004_console**, commerce **0004_console**, payouts **0003_console**, engagement **0006_console** and **0007_console_templates** (inserts notification wording), platform **0003_console_settings** (inserts settings). The console fails on Neon until these run.
+- **M5 (dev and e2e, same command; adds tables, columns and rows only, checked with `sqlmigrate`):** catalog **0006_console**, learning **0004_console** and **0005_console_a_verify** (a new certificate-check function; the old one stays), commerce **0004_console**, payouts **0003_console**, engagement **0006_console** and **0007_console_templates** (inserts notification wording), payouts **0004_console_c_request_failed** (choices only, no SQL), platform **0003_console_settings** (inserts settings). The console fails on Neon until these run.
 
 ## Settings still needed
 - Azure storage account → Resource sharing (CORS) → Blob service: allow the frontend origin, methods PUT/GET/HEAD, headers `*`. Without it, browser file uploads fail (assignment hand-ins, and later studio files).

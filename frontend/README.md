@@ -37,7 +37,10 @@ page and faded out so content stays readable. Purely decorative (`aria-hidden`).
 | Instructor studio, design page | blueprint grid |
 | Studio: course curriculum builder | storyboard (film strip with sketched frames) |
 | Studio: sales & earnings, payouts | coins (coin stacks beside rising bars) |
-| Admin console | circuit traces |
+| Admin console (dashboard, audit log) | circuit traces |
+| Console: approvals | stamp (approval seal over pages) |
+| Console: courses / instructors, students / money pages / reports | mosaic / org chart / coins / chart grid |
+| Console: reviews, communications / certificates / companies / settings | bubbles / guilloche / contours / dials |
 | Sign-in pages | aurora |
 | Empty / not found | orbit |
 | Player: lesson pages (reading, link, live, quiz, assignment) | notebook (ruled page, pencil marks) |

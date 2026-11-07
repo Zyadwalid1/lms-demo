@@ -348,12 +348,21 @@ def apply_as_instructor(request, body: InstructorProfileIn):
         defaults={"headline": html.plain(body.headline, 160), "bio": html.plain(body.bio, 5000),
                   "website_url": body.website_url},
     )  # fmt: skip
+    reapplied = False
     if not created:
         changes = {"headline": html.plain(body.headline, 160), "bio": html.plain(body.bio, 5000),
                    "website_url": body.website_url}  # fmt: skip
         if profile.status == InstructorProfile.Status.REJECTED:  # applying again: back in the queue
             changes["status"] = profile.status = InstructorProfile.Status.PENDING
+        reapplied = changes.get("status") == InstructorProfile.Status.PENDING
         InstructorProfile.objects.filter(pk=profile.pk).update(**changes)
+    if created or reapplied:
+        from apps.engagement.notify import notify_staff
+
+        name = request.user.full_name or request.user.email
+        notify_staff("staff_instructor_application", {"name": name},
+                     url=f"/console/instructors?tab=applications&user={request.user.id}",
+                     dedupe=f"apply:{profile.id}:{profile.updated_at:%Y%m%d%H%M}")  # fmt: skip
     return {"status": profile.status}
 
 

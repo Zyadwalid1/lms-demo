@@ -186,4 +186,17 @@ def payments() -> dict:
 
 
 def tiles() -> list[dict]:
-    return [database(), cache_tile(), queue(), storage(), video(), email(), payments()]
+    out = [database(), cache_tile(), queue(), storage(), video(), email(), payments()]
+    alert(out)
+    return out
+
+
+def alert(rows: list[dict]) -> None:
+    """A red tile tells every staff member once an hour per service (the bell + email)."""
+    from apps.engagement.notify import notify_staff
+
+    hour = timezone.now().strftime("%Y%m%d%H")
+    for t in rows:
+        if t["status"] == DOWN:
+            notify_staff("staff_health_alert", {"service": t["label"], "detail": t["detail"]},
+                         url="/console#health", dedupe=f"health:{t['key']}:{hour}")  # fmt: skip

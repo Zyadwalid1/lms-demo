@@ -48,13 +48,16 @@ TYPED_PREFIXES = (
     "/api/v1/learning/", "/api/v1/engagement/", "/api/v1/identity/", "/api/v1/compliance/my",  # M2
     "/api/v1/org/", "/api/v1/compliance/",  # M3
     "/api/v1/studio/",  # M4
-    "/api/v1/console/", "/api/v1/platform/",  # M5
+    "/api/v1/console/", "/api/v1/platform/", "/api/v1/payouts/",  # M5
 )  # fmt: skip
 NOT_JSON = {  # files and webhooks
     "/api/v1/commerce/webhooks/stripe",
     "/api/v1/learning/certificates/{certificate_id}/pdf",
     "/api/v1/compliance/export.csv",
     "/api/v1/console/reports/export.csv",
+    "/api/v1/console/certificates/templates/{template_id}/preview.pdf",
+    "/api/v1/console/certificates/issued.csv",
+    "/api/v1/console/certificates/{certificate_id}/pdf",
 }
 
 

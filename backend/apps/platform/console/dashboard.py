@@ -62,15 +62,15 @@ class ConsoleOverviewOut(Schema):
     attention: list[ConsoleAttentionOut]
 
 
-class ConsoleActivityOut(Schema):
+class ConsoleDashboardActivityOut(Schema):
     kind: str  # course_submitted | course_published | instructor_applied | payout_requested | order | ticket | subscription
     text: str
     at: datetime
     url: str
 
 
-class ConsoleActivityListOut(Schema):
-    items: list[ConsoleActivityOut]
+class ConsoleDashboardActivityListOut(Schema):
+    items: list[ConsoleDashboardActivityOut]
 
 
 class ConsoleOutboxFailOut(Schema):
@@ -197,7 +197,7 @@ def _gbp(minor: int) -> str:
     return f"£{minor / 100:,.2f}"
 
 
-@router.get("/activity", response=ConsoleActivityListOut)
+@router.get("/activity", response=ConsoleDashboardActivityListOut)
 def activity(request, limit: int = 10):
     """The latest things that happened on the platform, newest first, each with a link."""
     staff(request)

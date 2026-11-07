@@ -4570,7 +4570,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/console/people/{user_id}": {
+    "/api/v1/console/people/accounts/{user_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -4590,7 +4590,7 @@ export interface paths {
         patch: operations["apps_platform_console_people_edit_account"];
         trace?: never;
     };
-    "/api/v1/console/people/{user_id}/suspend": {
+    "/api/v1/console/people/accounts/{user_id}/suspend": {
         parameters: {
             query?: never;
             header?: never;
@@ -4610,7 +4610,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/console/people/{user_id}/reactivate": {
+    "/api/v1/console/people/accounts/{user_id}/reactivate": {
         parameters: {
             query?: never;
             header?: never;
@@ -4936,6 +4936,131 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/console/sales/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sales Overview */
+        get: operations["apps_platform_console_sales_sales_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Orders */
+        get: operations["apps_platform_console_sales_orders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Order Detail */
+        get: operations["apps_platform_console_sales_order_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/orders/items/{item_id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refund
+         * @description Staff refund (any time, reason required): money back, access removed, learner told.
+         */
+        post: operations["apps_platform_console_sales_refund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Refunds */
+        get: operations["apps_platform_console_sales_refunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Invoices */
+        get: operations["apps_platform_console_sales_invoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/sales/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sales Facets
+         * @description The values the order filters offer (only what really occurs).
+         */
+        get: operations["apps_platform_console_sales_sales_facets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/console/currencies": {
         parameters: {
             query?: never;
@@ -5038,6 +5163,242 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/console/price-tiers/{tier_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Tier
+         * @description New GBP base price: every course on the tier changes, and the tier's unlocked
+         *     prices in other currencies are recalculated from the latest rates at once.
+         */
+        patch: operations["apps_platform_console_pricing_update_tier"];
+        trace?: never;
+    };
+    "/api/v1/console/pricing/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pricing Overview */
+        get: operations["apps_platform_console_pricing_pricing_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Course Prices */
+        get: operations["apps_platform_console_pricing_course_prices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/courses/{course_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Course Price */
+        put: operations["apps_platform_console_pricing_set_course_price"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Price */
+        post: operations["apps_platform_console_pricing_bulk_price"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/regional": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Regional Prices */
+        get: operations["apps_platform_console_pricing_regional_prices"];
+        put?: never;
+        /** Create Regional */
+        post: operations["apps_platform_console_pricing_create_regional"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/regional/{regional_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Regional
+         * @description Change the amount, or switch it off (rows are kept: past orders refer to them).
+         */
+        patch: operations["apps_platform_console_pricing_update_regional"];
+        trace?: never;
+    };
+    "/api/v1/console/pricing/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rules */
+        get: operations["apps_platform_console_pricing_rules"];
+        put?: never;
+        /** Create Rule */
+        post: operations["apps_platform_console_pricing_create_rule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/rules/{rule_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview Rule */
+        get: operations["apps_platform_console_pricing_preview_rule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/rules/{rule_id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Rule
+         * @description Writes the new course prices once; the rule stays as a record of what was done.
+         */
+        post: operations["apps_platform_console_pricing_apply_rule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/rules/{rule_id}/off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Switch Off Rule */
+        post: operations["apps_platform_console_pricing_switch_off_rule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/pricing/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pricing Settings
+         * @description The pricing and promotion switches (saved through PUT /console/settings/{key}).
+         */
+        get: operations["apps_platform_console_pricing_pricing_settings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/promotions/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Promotions Overview */
+        get: operations["apps_platform_console_promotions_promotions_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/console/promotions": {
         parameters: {
             query?: never;
@@ -5063,11 +5424,52 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Promotion Detail */
+        get: operations["apps_platform_console_promotions_promotion_detail"];
+        /** Update Promotion */
+        put: operations["apps_platform_console_promotions_update_promotion"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/promotions/{promotion_id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
         get?: never;
         put?: never;
-        post?: never;
-        /** Stop Promotion */
-        delete: operations["apps_platform_console_promotions_stop_promotion"];
+        /**
+         * Duplicate Promotion
+         * @description A draft copy (no code: codes are unique; staff give it one before it goes live).
+         */
+        post: operations["apps_platform_console_promotions_duplicate_promotion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/promotions/{promotion_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deactivate Promotion
+         * @description Ends it now (checkout stops applying it at once). Kept for usage history.
+         */
+        post: operations["apps_platform_console_promotions_deactivate_promotion"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5085,6 +5487,26 @@ export interface paths {
         post?: never;
         /** Stop Coupon */
         delete: operations["apps_platform_console_promotions_stop_coupon"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/promotions-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Promotion Options
+         * @description Courses (search), categories and plans for the target picker.
+         */
+        get: operations["apps_platform_console_promotions_promotion_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -5144,40 +5566,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/console/orders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Orders */
-        get: operations["apps_platform_console_sales_orders"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/console/orders/items/{item_id}/refund": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Refund */
-        post: operations["apps_platform_console_sales_refund"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/console/search": {
         parameters: {
             query?: never;
@@ -5218,6 +5606,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/console/subscriptions/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subscriptions Overview */
+        get: operations["apps_platform_console_subscriptions_subscriptions_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/console/plans": {
         parameters: {
             query?: never;
@@ -5228,7 +5633,66 @@ export interface paths {
         /** Plans */
         get: operations["apps_platform_console_subscriptions_plans"];
         put?: never;
+        /** Create Plan */
+        post: operations["apps_platform_console_subscriptions_create_plan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Plan */
+        patch: operations["apps_platform_console_subscriptions_update_plan"];
+        trace?: never;
+    };
+    "/api/v1/console/plans/{plan_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan Status
+         * @description Deactivate (reason required: no new subscribers; current ones keep their plan) or reactivate.
+         */
+        post: operations["apps_platform_console_subscriptions_plan_status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/plans/{plan_id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Duplicate Plan
+         * @description A switched-off copy: same settings, included courses and amounts (Stripe prices are
+         *     made when staff save each price, so the copy can be priced differently first).
+         */
+        post: operations["apps_platform_console_subscriptions_duplicate_plan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5245,6 +5709,98 @@ export interface paths {
         get?: never;
         /** Set Plan Price */
         put: operations["apps_platform_console_subscriptions_set_plan_price"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/plans/{plan_id}/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan Courses */
+        get: operations["apps_platform_console_subscriptions_plan_courses"];
+        /**
+         * Set Plan Courses
+         * @description An empty list = every course marked "in subscription" (the behaviour before M5).
+         */
+        put: operations["apps_platform_console_subscriptions_set_plan_courses"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/subscribers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subscribers */
+        get: operations["apps_platform_console_subscriptions_subscribers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/subscribers/{subscription_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Subscriber
+         * @description Cancel at the end of the paid period (access continues until then).
+         */
+        post: operations["apps_platform_console_subscriptions_cancel_subscriber"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/subscription-payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subscription Payments */
+        get: operations["apps_platform_console_subscriptions_subscription_payments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/subscription-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subscription Events */
+        get: operations["apps_platform_console_subscriptions_subscription_events"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -7489,6 +8045,8 @@ export interface components {
             decided_at: string | null;
             /** Paid At */
             paid_at: string | null;
+            /** Payout Id */
+            payout_id: string | null;
         };
         /** PayoutsRequestIn */
         PayoutsRequestIn: {
@@ -11200,17 +11758,17 @@ export interface components {
             /** Series */
             series: components["schemas"]["ConsolePointOut"][];
         };
-        /** ConsoleActivityListOut */
-        ConsoleActivityListOut: {
+        /** ConsoleDashboardActivityListOut */
+        ConsoleDashboardActivityListOut: {
             /** Items */
-            items: components["schemas"]["ConsoleActivityOut"][];
+            items: components["schemas"]["ConsoleDashboardActivityOut"][];
         };
-        /** ConsoleActivityOut */
-        ConsoleActivityOut: {
+        /** ConsoleDashboardActivityOut */
+        ConsoleDashboardActivityOut: {
             /** Kind */
             kind: string;
-            /** Title */
-            title: string;
+            /** Text */
+            text: string;
             /**
              * At
              * Format: date-time
@@ -11858,6 +12416,20 @@ export interface components {
             /** Is Instructor */
             is_instructor: boolean;
         };
+        /** ConsoleActivityOut */
+        ConsoleActivityOut: {
+            /** Kind */
+            kind: string;
+            /** Title */
+            title: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Url */
+            url: string;
+        };
         /** ConsoleStudentDetailOut */
         ConsoleStudentDetailOut: {
             /**
@@ -12268,6 +12840,238 @@ export interface components {
             /** Key */
             key: string;
         };
+        /** ConsoleSalesKpisOut */
+        ConsoleSalesKpisOut: {
+            total_sales: components["schemas"]["ConsoleKpiOut"];
+            revenue: components["schemas"]["ConsoleKpiOut"];
+            course_sales: components["schemas"]["ConsoleKpiOut"];
+            subscriptions: components["schemas"]["ConsoleKpiOut"];
+            refunds: components["schemas"]["ConsoleKpiOut"];
+            average_order: components["schemas"]["ConsoleKpiOut"];
+        };
+        /** ConsoleSalesOverviewOut */
+        ConsoleSalesOverviewOut: {
+            range: components["schemas"]["ConsoleRangeOut"];
+            kpis: components["schemas"]["ConsoleSalesKpisOut"];
+            /** Series */
+            series: components["schemas"]["ConsolePointOut"][];
+            /** By Type */
+            by_type: components["schemas"]["ConsoleSalesSliceOut"][];
+        };
+        /** ConsoleSalesSliceOut */
+        ConsoleSalesSliceOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Value */
+            value: number;
+        };
+        /** ConsoleOrderPageOut */
+        ConsoleOrderPageOut: {
+            /** Items */
+            items: components["schemas"]["ConsoleOrderRowOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Total */
+            total: number;
+        };
+        /** ConsoleOrderRowOut */
+        ConsoleOrderRowOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Products */
+            products: string;
+            /** Item Count */
+            item_count: number;
+            /** Status */
+            status: string;
+            /** Currency */
+            currency: string;
+            /** Exponent */
+            exponent: number;
+            /** Total Minor */
+            total_minor: number;
+            /** Gbp Total Minor */
+            gbp_total_minor: number;
+            /** Payment Method */
+            payment_method: string;
+            /** Card Brand */
+            card_brand: string;
+            /** Card Last4 */
+            card_last4: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Paid At */
+            paid_at: string | null;
+            /** Payment Intent */
+            payment_intent: string;
+        };
+        /** ConsoleOrderDetailOut */
+        ConsoleOrderDetailOut: {
+            order: components["schemas"]["ConsoleOrderRowOut"];
+            /** Items */
+            items: components["schemas"]["ConsoleOrderItemOut"][];
+            /** Subtotal Minor */
+            subtotal_minor: number;
+            /** Discount Minor */
+            discount_minor: number;
+            /** Discount Label */
+            discount_label: string;
+            /** Tax Minor */
+            tax_minor: number;
+            /** Prices Include Tax */
+            prices_include_tax: boolean;
+            /** Payment Status */
+            payment_status: string;
+            /** Invoice Url */
+            invoice_url: string | null;
+            /** Customer Orders */
+            customer_orders: number;
+            /** Refundable */
+            refundable: boolean;
+            /** Country */
+            country: string;
+        };
+        /** ConsoleOrderItemOut */
+        ConsoleOrderItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /** List Minor */
+            list_minor: number;
+            /** Discount Minor */
+            discount_minor: number;
+            /** Gross Minor */
+            gross_minor: number;
+            /** Refunded At */
+            refunded_at: string | null;
+            /** Refund Reason */
+            refund_reason: string;
+        };
+        /** ConsoleRefundPageOut */
+        ConsoleRefundPageOut: {
+            /** Items */
+            items: components["schemas"]["ConsoleRefundRowOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** ConsoleRefundRowOut */
+        ConsoleRefundRowOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Order Number */
+            order_number: string;
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Course Title */
+            course_title: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Amount Minor */
+            amount_minor: number;
+            /** Currency */
+            currency: string;
+            /** Exponent */
+            exponent: number;
+            /** Reason */
+            reason: string;
+            /** Status */
+            status: string;
+            /** By Staff */
+            by_staff: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ConsoleInvoicePageOut */
+        ConsoleInvoicePageOut: {
+            /** Items */
+            items: components["schemas"]["ConsoleInvoiceRowOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** ConsoleInvoiceRowOut */
+        ConsoleInvoiceRowOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Kind */
+            kind: string;
+            /** Order Id */
+            order_id: string | null;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Amount Minor */
+            amount_minor: number;
+            /** Currency */
+            currency: string;
+            /** Exponent */
+            exponent: number;
+            /** Status */
+            status: string;
+            /** Url */
+            url: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+        };
+        /** ConsoleSalesFacetsOut */
+        ConsoleSalesFacetsOut: {
+            /** Currencies */
+            currencies: string[];
+            /** Methods */
+            methods: string[];
+        };
         /** ConsoleCurrencyOut */
         ConsoleCurrencyOut: {
             /** Code */
@@ -12342,6 +13146,8 @@ export interface components {
             amount_minor: number | null;
             /** Locked */
             locked: boolean;
+            /** Courses */
+            courses: number;
         };
         /** ConsoleTierAmountIn */
         ConsoleTierAmountIn: {
@@ -12353,6 +13159,284 @@ export interface components {
              */
             lock: boolean;
         };
+        /** ConsoleTierPatch */
+        ConsoleTierPatch: {
+            /** Gbp Minor */
+            gbp_minor: number;
+        };
+        /** ConsolePricingOverviewOut */
+        ConsolePricingOverviewOut: {
+            /** Courses With Price */
+            courses_with_price: number;
+            /** Average Price Gbp Minor */
+            average_price_gbp_minor: number;
+            /** Active Currencies */
+            active_currencies: string[];
+            /** Regional Overrides */
+            regional_overrides: number;
+            /** Active Rules */
+            active_rules: number;
+            /** Free Courses */
+            free_courses: number;
+        };
+        /** ConsoleCourseAmountOut */
+        ConsoleCourseAmountOut: {
+            /** Currency */
+            currency: string;
+            /** Exponent */
+            exponent: number;
+            /** Amount Minor */
+            amount_minor: number;
+            /** Regional */
+            regional: boolean;
+        };
+        /** ConsoleCoursePricePageOut */
+        ConsoleCoursePricePageOut: {
+            /** Items */
+            items: components["schemas"]["ConsoleCoursePriceRowOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Currencies */
+            currencies: string[];
+        };
+        /** ConsoleCoursePriceRowOut */
+        ConsoleCoursePriceRowOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Category */
+            category: string | null;
+            /** Instructors */
+            instructors: string[];
+            /** Is Free */
+            is_free: boolean;
+            /** Tier Id */
+            tier_id: string | null;
+            /** Tier Name */
+            tier_name: string | null;
+            /** Gbp Minor */
+            gbp_minor: number | null;
+            /** Amounts */
+            amounts: components["schemas"]["ConsoleCourseAmountOut"][];
+            /** Pricing Type */
+            pricing_type: string;
+            /** Regional Count */
+            regional_count: number;
+            /** In Subscription */
+            in_subscription: boolean;
+        };
+        /** ConsolePricingCoursePriceIn */
+        ConsolePricingCoursePriceIn: {
+            /** Tier Id */
+            tier_id?: string | null;
+            /**
+             * Is Free
+             * @default false
+             */
+            is_free: boolean;
+        };
+        /** ConsoleBulkPriceOut */
+        ConsoleBulkPriceOut: {
+            /** Updated */
+            updated: number;
+        };
+        /** ConsoleBulkPriceIn */
+        ConsoleBulkPriceIn: {
+            /** Tier Id */
+            tier_id?: string | null;
+            /**
+             * Is Free
+             * @default false
+             */
+            is_free: boolean;
+            /** Course Ids */
+            course_ids: string[];
+        };
+        /** ConsoleRegionalOut */
+        ConsoleRegionalOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Course Id */
+            course_id: string | null;
+            /** Course Title */
+            course_title: string | null;
+            /** Tier Id */
+            tier_id: string | null;
+            /** Tier Name */
+            tier_name: string | null;
+            /** Country */
+            country: string;
+            /** Currency */
+            currency: string;
+            /** Exponent */
+            exponent: number;
+            /** Amount Minor */
+            amount_minor: number;
+            /** Standard Minor */
+            standard_minor: number | null;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ConsoleRegionalIn */
+        ConsoleRegionalIn: {
+            /** Course Id */
+            course_id?: string | null;
+            /** Tier Id */
+            tier_id?: string | null;
+            /** Country */
+            country: string;
+            /** Currency */
+            currency: string;
+            /** Amount Minor */
+            amount_minor: number;
+        };
+        /** ConsoleRegionalPatch */
+        ConsoleRegionalPatch: {
+            /** Amount Minor */
+            amount_minor?: number | null;
+            /** Is Active */
+            is_active?: boolean | null;
+        };
+        /** ConsoleRuleOut */
+        ConsoleRuleOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Scope */
+            scope: string;
+            /** Target Id */
+            target_id: string | null;
+            /** Target Name */
+            target_name: string | null;
+            /** Action */
+            action: string;
+            /** Tier Id */
+            tier_id: string | null;
+            /** Tier Name */
+            tier_name: string | null;
+            /** Percent */
+            percent: number | null;
+            /** Rounding */
+            rounding: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Applied At */
+            applied_at: string | null;
+            /** Applied Count */
+            applied_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ConsoleRuleIn */
+        ConsoleRuleIn: {
+            /** Name */
+            name: string;
+            /**
+             * Scope
+             * @default all
+             */
+            scope: string;
+            /** Target Id */
+            target_id?: string | null;
+            /** Action */
+            action: string;
+            /** Tier Id */
+            tier_id?: string | null;
+            /** Percent */
+            percent?: number | null;
+            /**
+             * Rounding
+             * @default nearest
+             */
+            rounding: string;
+        };
+        /** ConsoleRuleChangeOut */
+        ConsoleRuleChangeOut: {
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Title */
+            title: string;
+            /** From Tier */
+            from_tier: string | null;
+            /** From Gbp Minor */
+            from_gbp_minor: number | null;
+            /** To Tier */
+            to_tier: string;
+            /** To Gbp Minor */
+            to_gbp_minor: number;
+        };
+        /** ConsoleRulePreviewOut */
+        ConsoleRulePreviewOut: {
+            /** Changes */
+            changes: components["schemas"]["ConsoleRuleChangeOut"][];
+            /** Unchanged */
+            unchanged: number;
+        };
+        /** ConsolePricingSettingOut */
+        ConsolePricingSettingOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Kind */
+            kind: string;
+            /** Value */
+            value: boolean | number | string;
+            /** Choices */
+            choices: string[];
+        };
+        /** ConsolePromoOverviewOut */
+        ConsolePromoOverviewOut: {
+            /** Active */
+            active: number;
+            /** Scheduled */
+            scheduled: number;
+            /** Redemptions */
+            redemptions: number;
+            /** Revenue Gbp Minor */
+            revenue_gbp_minor: number;
+            /** Discount Gbp Minor */
+            discount_gbp_minor: number;
+            /** Average Discount Pct */
+            average_discount_pct: number;
+        };
+        /** ConsolePromoTargetOut */
+        ConsolePromoTargetOut: {
+            /** Target Type */
+            target_type: string;
+            /** Target Id */
+            target_id: string | null;
+            /** Segment */
+            segment: string;
+            /** Label */
+            label: string;
+        };
         /** ConsolePromotionOut */
         ConsolePromotionOut: {
             /**
@@ -12362,6 +13446,12 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+            /** Kind */
+            kind: string;
+            /** Code */
+            code: string;
+            /** Description */
+            description: string;
             /** Percent Off */
             percent_off: number;
             /**
@@ -12376,11 +13466,59 @@ export interface components {
             ends_at: string;
             /** Is Active */
             is_active: boolean;
+            /** Status */
+            status: string;
+            /** Max Redemptions */
+            max_redemptions: number | null;
+            /** Per User Limit */
+            per_user_limit: number | null;
+            /** Min Order Minor */
+            min_order_minor: number;
+            /** Redeemed Count */
+            redeemed_count: number;
+            /** Target Summary */
+            target_summary: string;
+            /** Targets */
+            targets: components["schemas"]["ConsolePromoTargetOut"][];
+            /** Revenue Gbp Minor */
+            revenue_gbp_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ConsolePromoTargetIn */
+        ConsolePromoTargetIn: {
+            /** Target Type */
+            target_type: string;
+            /** Target Id */
+            target_id?: string | null;
+            /**
+             * Segment
+             * @default
+             */
+            segment: string;
         };
         /** ConsolePromotionIn */
         ConsolePromotionIn: {
             /** Name */
             name: string;
+            /**
+             * Kind
+             * @default campaign
+             */
+            kind: string;
+            /**
+             * Code
+             * @default
+             */
+            code: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
             /** Percent Off */
             percent_off: number;
             /**
@@ -12393,6 +13531,90 @@ export interface components {
              * Format: date-time
              */
             ends_at: string;
+            /** Max Redemptions */
+            max_redemptions?: number | null;
+            /** Per User Limit */
+            per_user_limit?: number | null;
+            /**
+             * Min Order Minor
+             * @default 0
+             */
+            min_order_minor: number;
+            /**
+             * Draft
+             * @default false
+             */
+            draft: boolean;
+            /** Targets */
+            targets?: components["schemas"]["ConsolePromoTargetIn"][];
+        };
+        /** ConsolePromoActivityOut */
+        ConsolePromoActivityOut: {
+            /** Action */
+            action: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+        };
+        /** ConsolePromoUseOut */
+        ConsolePromoUseOut: {
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Order Number */
+            order_number: string;
+            /** Email */
+            email: string;
+            /** Discount Minor */
+            discount_minor: number;
+            /** Currency */
+            currency: string;
+            /** Exponent */
+            exponent: number;
+            /** Total Minor */
+            total_minor: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ConsolePromotionDetailOut */
+        ConsolePromotionDetailOut: {
+            promotion: components["schemas"]["ConsolePromotionOut"];
+            /** Uses */
+            uses: components["schemas"]["ConsolePromoUseOut"][];
+            /** Activity */
+            activity: components["schemas"]["ConsolePromoActivityOut"][];
+            /** Discount Gbp Minor */
+            discount_gbp_minor: number;
+        };
+        /** ConsolePromoOptionOut */
+        ConsolePromoOptionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+        };
+        /** ConsolePromoOptionsOut */
+        ConsolePromoOptionsOut: {
+            /** Courses */
+            courses: components["schemas"]["ConsolePromoOptionOut"][];
+            /** Categories */
+            categories: components["schemas"]["ConsolePromoOptionOut"][];
+            /** Plans */
+            plans: components["schemas"]["ConsolePromoOptionOut"][];
         };
         /** ConsoleAnalyticsOut */
         ConsoleAnalyticsOut: {
@@ -12534,40 +13756,6 @@ export interface components {
             /** Name */
             name: string;
         };
-        /** ConsoleOrderPageOut */
-        ConsoleOrderPageOut: {
-            /** Items */
-            items: components["schemas"]["ConsoleOrderRowOut"][];
-            /** Next Cursor */
-            next_cursor: string | null;
-        };
-        /** ConsoleOrderRowOut */
-        ConsoleOrderRowOut: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Email */
-            email: string;
-            /** Status */
-            status: string;
-            /** Currency */
-            currency: string;
-            /** Total Minor */
-            total_minor: number;
-            /** Gbp Total Minor */
-            gbp_total_minor: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Paid At */
-            paid_at: string | null;
-            /** Payment Intent */
-            payment_intent: string;
-        };
         /** ConsoleSearchGroupOut */
         ConsoleSearchGroupOut: {
             /** Key */
@@ -12609,6 +13797,36 @@ export interface components {
             /** Payout Requests */
             payout_requests: number;
         };
+        /** ConsoleSubsByPlanOut */
+        ConsoleSubsByPlanOut: {
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Name */
+            name: string;
+            /** Active */
+            active: number;
+            /** Revenue Gbp Minor */
+            revenue_gbp_minor: number;
+        };
+        /** ConsoleSubsKpisOut */
+        ConsoleSubsKpisOut: {
+            subscribers: components["schemas"]["ConsoleKpiOut"];
+            active: components["schemas"]["ConsoleKpiOut"];
+            renewals: components["schemas"]["ConsoleKpiOut"];
+            revenue: components["schemas"]["ConsoleKpiOut"];
+        };
+        /** ConsoleSubsOverviewOut */
+        ConsoleSubsOverviewOut: {
+            range: components["schemas"]["ConsoleRangeOut"];
+            kpis: components["schemas"]["ConsoleSubsKpisOut"];
+            /** Series */
+            series: components["schemas"]["ConsolePointOut"][];
+            /** By Plan */
+            by_plan: components["schemas"]["ConsoleSubsByPlanOut"][];
+        };
         /** ConsolePlanOut */
         ConsolePlanOut: {
             /**
@@ -12620,23 +13838,87 @@ export interface components {
             code: string;
             /** Name */
             name: string;
+            /** Description */
+            description: string;
             /** Audience */
             audience: string;
             /** Interval */
             interval: string;
+            /** Trial Days */
+            trial_days: number;
+            /** Min Seats */
+            min_seats: number;
+            /** Renewal */
+            renewal: string;
             /** Is Active */
             is_active: boolean;
             /** Prices */
             prices: components["schemas"]["ConsolePlanPriceOut"][];
+            /** Included Courses */
+            included_courses: number | null;
+            /** All Courses */
+            all_courses: number;
+            /** Subscribers */
+            subscribers: number;
+            /** Revenue Gbp Minor */
+            revenue_gbp_minor: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** ConsolePlanPriceOut */
         ConsolePlanPriceOut: {
             /** Currency */
             currency: string;
+            /** Exponent */
+            exponent: number;
             /** Amount Minor */
             amount_minor: number;
             /** Stripe Price Id */
             stripe_price_id: string;
+        };
+        /** ConsolePlanIn */
+        ConsolePlanIn: {
+            /** Name */
+            name: string;
+            /** Code */
+            code: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Audience
+             * @default personal
+             */
+            audience: string;
+            /**
+             * Interval
+             * @default month
+             */
+            interval: string;
+            /**
+             * Trial Days
+             * @default 0
+             */
+            trial_days: number;
+            /**
+             * Min Seats
+             * @default 1
+             */
+            min_seats: number;
+            /**
+             * Renewal
+             * @default automatic
+             */
+            renewal: string;
+            /** Prices */
+            prices?: components["schemas"]["ConsolePlanPriceIn"][];
+            /** Course Ids */
+            course_ids?: string[];
         };
         /** ConsolePlanPriceIn */
         ConsolePlanPriceIn: {
@@ -12649,6 +13931,147 @@ export interface components {
              * @default
              */
             stripe_price_id: string;
+            /**
+             * Create Stripe Price
+             * @default false
+             */
+            create_stripe_price: boolean;
+        };
+        /** ConsolePlanPatch */
+        ConsolePlanPatch: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Trial Days */
+            trial_days?: number | null;
+            /** Min Seats */
+            min_seats?: number | null;
+            /** Renewal */
+            renewal?: string | null;
+        };
+        /** ConsolePlanStatusIn */
+        ConsolePlanStatusIn: {
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
+        /** ConsolePlanCourseOut */
+        ConsolePlanCourseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** In Subscription */
+            in_subscription: boolean;
+        };
+        /** ConsolePlanCoursesOut */
+        ConsolePlanCoursesOut: {
+            /** Mode */
+            mode: string;
+            /** Courses */
+            courses: components["schemas"]["ConsolePlanCourseOut"][];
+        };
+        /** ConsolePlanCoursesIn */
+        ConsolePlanCoursesIn: {
+            /** Course Ids */
+            course_ids: string[];
+        };
+        /** ConsoleSubscriberOut */
+        ConsoleSubscriberOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Company */
+            company: string;
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Plan */
+            plan: string;
+            /** Status */
+            status: string;
+            /** Seats */
+            seats: number;
+            /** Currency */
+            currency: string;
+            /** Current Period End */
+            current_period_end: string | null;
+            /** Cancel At Period End */
+            cancel_at_period_end: boolean;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+        };
+        /** ConsoleSubscriberPageOut */
+        ConsoleSubscriberPageOut: {
+            /** Items */
+            items: components["schemas"]["ConsoleSubscriberOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** ConsoleSubEventOut */
+        ConsoleSubEventOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Subscription Id
+             * Format: uuid
+             */
+            subscription_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Plan */
+            plan: string;
+            /** Kind */
+            kind: string;
+            /** From Value */
+            from_value: string;
+            /** To Value */
+            to_value: string;
+            /** Amount Minor */
+            amount_minor: number | null;
+            /** Currency */
+            currency: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ConsoleSubEventPageOut */
+        ConsoleSubEventPageOut: {
+            /** Items */
+            items: components["schemas"]["ConsoleSubEventOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
     };
     responses: never;
@@ -18704,7 +20127,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConsoleActivityListOut"];
+                    "application/json": components["schemas"]["ConsoleDashboardActivityListOut"];
                 };
             };
         };
@@ -19972,6 +21395,178 @@ export interface operations {
             };
         };
     };
+    apps_platform_console_sales_sales_overview: {
+        parameters: {
+            query?: {
+                range?: string;
+                start?: string | null;
+                end?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleSalesOverviewOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_sales_orders: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                status?: string | null;
+                product?: string | null;
+                method?: string | null;
+                currency?: string | null;
+                user?: string | null;
+                start?: string | null;
+                end?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOrderPageOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_sales_order_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOrderDetailOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_sales_refund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleReasonIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleStatusOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_sales_refunds: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleRefundPageOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_sales_invoices: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                kind?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleInvoicePageOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_sales_sales_facets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleSalesFacetsOut"];
+                };
+            };
+        };
+    };
     apps_platform_console_pricing_currencies: {
         parameters: {
             query?: {
@@ -20113,9 +21708,360 @@ export interface operations {
             };
         };
     };
-    apps_platform_console_promotions_promotions: {
+    apps_platform_console_pricing_update_tier: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                tier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleTierPatch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_pricing_overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsolePricingOverviewOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_course_prices: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                category?: string | null;
+                status?: string | null;
+                kind?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleCoursePricePageOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_set_course_price: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                course_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsolePricingCoursePriceIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_bulk_price: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleBulkPriceIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleBulkPriceOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_regional_prices: {
+        parameters: {
+            query?: {
+                country?: string | null;
+                course?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleRegionalOut"][];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_create_regional: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleRegionalIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleIdOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_update_regional: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                regional_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleRegionalPatch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_rules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleRuleOut"][];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_create_rule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleRuleIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleIdOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_preview_rule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleRulePreviewOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_apply_rule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleBulkPriceOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_switch_off_rule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_pricing_pricing_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsolePricingSettingOut"][];
+                };
+            };
+        };
+    };
+    apps_platform_console_promotions_promotions_overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsolePromoOverviewOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_promotions_promotions: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                kind?: string | null;
+                status?: string | null;
+                target?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -20157,7 +22103,7 @@ export interface operations {
             };
         };
     };
-    apps_platform_console_promotions_stop_promotion: {
+    apps_platform_console_promotions_promotion_detail: {
         parameters: {
             query?: never;
             header?: never;
@@ -20167,6 +22113,80 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsolePromotionDetailOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_promotions_update_promotion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsolePromotionIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_promotions_duplicate_promotion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleIdOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_promotions_deactivate_promotion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleReasonIn"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -20197,6 +22217,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_promotions_promotion_options: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsolePromoOptionsOut"];
                 };
             };
         };
@@ -20272,57 +22314,6 @@ export interface operations {
             };
         };
     };
-    apps_platform_console_sales_orders: {
-        parameters: {
-            query?: {
-                q?: string | null;
-                status?: string | null;
-                cursor?: string | null;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConsoleOrderPageOut"];
-                };
-            };
-        };
-    };
-    apps_platform_console_sales_refund: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                item_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ConsoleReasonIn"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConsoleStatusOut"];
-                };
-            };
-        };
-    };
     apps_platform_console_search_search: {
         parameters: {
             query?: {
@@ -20366,9 +22357,37 @@ export interface operations {
             };
         };
     };
+    apps_platform_console_subscriptions_subscriptions_overview: {
+        parameters: {
+            query?: {
+                range?: string;
+                start?: string | null;
+                end?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleSubsOverviewOut"];
+                };
+            };
+        };
+    };
     apps_platform_console_subscriptions_plans: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+                status?: string | null;
+                currency?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -20382,6 +22401,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsolePlanOut"][];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_create_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsolePlanIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleIdOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_update_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsolePlanPatch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_plan_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsolePlanStatusIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_duplicate_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleIdOut"];
                 };
             };
         };
@@ -20408,6 +22525,155 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_plan_courses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsolePlanCoursesOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_set_plan_courses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsolePlanCoursesIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_subscribers: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                plan?: string | null;
+                status?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleSubscriberPageOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_cancel_subscriber: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subscription_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsoleReasonIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_subscription_payments: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleInvoicePageOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_subscriptions_subscription_events: {
+        parameters: {
+            query?: {
+                kind?: string | null;
+                days?: number | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleSubEventPageOut"];
                 };
             };
         };

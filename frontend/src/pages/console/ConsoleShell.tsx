@@ -1,6 +1,11 @@
-import { Award, BadgePercent, BarChart3, BookOpen, Building2, CreditCard, GraduationCap, History, LayoutDashboard, MessageSquare, Percent, Receipt, Settings, Stamp, Star, Tags, Users, Wallet } from 'lucide-react'
+import { Award, BadgePercent, ShieldCheck, BarChart3, BookOpen, Building2, CreditCard, GraduationCap, History, LayoutDashboard, MessageSquare, Percent, Receipt, Settings, Stamp, Star, Tags, Users, Wallet } from 'lucide-react'
 
+import { ApiError } from '@/api/client'
+import { Backdrop } from '@/components/art/backdrops'
 import { type NavSection, WorkspaceLayout } from '@/components/layout/WorkspaceLayout'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Link } from '@/lib/router'
 import { ConsoleSearch } from '@/features/console/ConsoleSearch'
 import { useNavCounts } from '@/features/console/api'
 
@@ -63,5 +68,27 @@ const consoleNav: NavSection[] = [
 /** The admin console frame: navy sidebar (drawer on phones), circuit artwork by default,
  * the global search in the header. Loaded only by staff (its own chunk). */
 export function ConsoleShell() {
+  const { error } = useNavCounts()
+  if (error instanceof ApiError && error.code === 'mfa_required') return <MfaRequired />
   return <WorkspaceLayout area="Admin" sections={consoleNav} art="circuit" header={<ConsoleSearch />} />
+}
+
+/** Settings > Security can require 2-step sign-in for staff: until it is on, the console API
+ * answers 403 mfa_required, so send the person to set it up instead of showing errors. */
+function MfaRequired() {
+  return (
+    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-bg px-4">
+      <Backdrop variant="circuit" height="100%" />
+      <Card className="relative w-full max-w-md animate-reveal p-6 text-center">
+        <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary-soft text-primary-soft-text">
+          <ShieldCheck className="size-6" aria-hidden />
+        </span>
+        <h1 className="mt-4 text-xl font-semibold tracking-tight">Turn on 2-step sign-in</h1>
+        <p className="mt-2 text-sm text-muted">Staff must use 2-step sign-in to open the admin console. It takes a minute with an authenticator app.</p>
+        <Button className="mt-5 w-full" asChild>
+          <Link to="/account">Set up 2-step sign-in</Link>
+        </Button>
+      </Card>
+    </main>
+  )
 }

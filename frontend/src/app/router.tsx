@@ -5,6 +5,7 @@ import { createBrowserRouter, Outlet } from 'react-router-dom'
 import { BusinessLayout } from '@/components/layout/BusinessLayout'
 import { LearnerLayout } from '@/components/layout/LearnerLayout'
 import { PublicLayout } from '@/components/layout/PublicLayout'
+import { SiteRoot } from '@/components/layout/SiteRoot'
 import { type NavSection, WorkspaceLayout } from '@/components/layout/WorkspaceLayout'
 import { NotFoundPage } from '@/pages/StatusPages'
 
@@ -49,6 +50,7 @@ const BillingPage = named(() => import('@/pages/business/BillingPage'), 'Billing
 const CompanySettingsPage = named(() => import('@/pages/business/CompanySettingsPage'), 'CompanySettingsPage')
 const InvitePage = named(() => import('@/pages/InvitePage'), 'InvitePage')
 const TeachPage = named(() => import('@/pages/studio/TeachPage'), 'TeachPage')
+const InstructorInvitePage = named(() => import('@/pages/studio/InstructorInvitePage'), 'InstructorInvitePage')
 const StudioDashboard = named(() => import('@/pages/studio/StudioDashboard'), 'StudioDashboard')
 const StudioCoursesPage = named(() => import('@/pages/studio/StudioCoursesPage'), 'StudioCoursesPage')
 const CourseBuilderPage = named(() => import('@/pages/studio/CourseBuilderPage'), 'CourseBuilderPage')
@@ -119,7 +121,9 @@ const studioNav: NavSection[] = [
   { title: 'Money', items: [{ to: '/studio/revenue', label: 'Sales & earnings', Icon: DollarSign }, { to: '/studio/payouts', label: 'Payouts', Icon: Wallet }] },
 ]
 
-export const router = createBrowserRouter([
+// SiteRoot applies the console's platform settings to every page: name, favicon, site
+// banner, maintenance page and "guest browsing off" (components/layout/SiteRoot.tsx).
+export const router = createBrowserRouter([{ element: <SiteRoot />, children: [
   {
     element: <PublicLayout />,
     children: [
@@ -148,6 +152,7 @@ export const router = createBrowserRouter([
           { path: '/account/orders', element: page(<OrdersPage />), handle: { art: 'ribbons' } },
           { path: '/account', element: page(<AccountPage />), handle: { art: 'dials' } },
           { path: '/teach', element: page(<TeachPage />), handle: { art: 'blueprint' } },
+          { path: '/teach/invite/:token', element: page(<InstructorInvitePage />), handle: { art: 'blueprint' } },
           { path: '/support', element: page(<SupportPage />), handle: { art: 'bubbles' } },
           { path: '/support/:id', element: page(<TicketPage />), handle: { art: 'bubbles' } },
         ],
@@ -240,4 +245,4 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '*', element: <Outlet /> },
-])
+]}])

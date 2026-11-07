@@ -5,6 +5,7 @@ unqualified names, so it misses our schema-qualified tables ("org"."org_units") 
 leaves data behind. This base truncates every domain schema instead.
 """
 
+from django.core.cache import cache
 from django.db import connections
 from django.test import TransactionTestCase
 
@@ -66,3 +67,4 @@ class SchemaTransactionTestCase(TransactionTestCase):
 
     def _fixture_teardown(self):
         truncate_domain_tables()
+        cache.clear()  # cached settings (e.g. maintenance mode) must not leak into the next test

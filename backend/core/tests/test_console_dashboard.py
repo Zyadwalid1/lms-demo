@@ -10,7 +10,7 @@ from django.test import override_settings
 from django.utils import timezone
 
 from apps.commerce.models import Order
-from apps.engagement.models import ContentReport
+from apps.engagement.models import ContentReport, Notification
 from apps.identity.models import InstructorProfile
 from apps.payouts.models import PayoutRequest
 from apps.platform.console import healthchecks
@@ -118,3 +118,18 @@ class ConsoleDashboardTest(SchemaTransactionTestCase):
         self.assertNotIn("sk_test", r.content.decode())
         self.assertEqual(calls.count("api.stripe.com"), 1)  # the second request used the 60 s cache
         self.assertEqual(again.json()["tiles"][-1]["status"], "down")
+        down = sum(t["status"] == "down" for t in r.json()["tiles"])
+        with tenant_context(user_id=self.staff.id, staff=True):  # one alert per red service per hour
+            alerts = Notification.objects.filter(user=self.staff, kind="staff_health_alert")
+            self.assertEqual(alerts.count(), down)  # the second call added none
+            self.assertNotIn("sk_test", " ".join(alerts.values_list("body", flat=True)))
+
+    def test_an_instructor_application_alerts_staff(self):
+        self.client.force_login(self.omar)
+        r = self.client.post("/api/v1/studio/instructor-profile", {"headline": "Data teacher", "bio": "Hello"},
+                             content_type="application/json")  # fmt: skip
+        self.assertEqual(r.status_code, 200)
+        with tenant_context(user_id=self.staff.id, staff=True):
+            alert = Notification.objects.get(user=self.staff, kind="staff_instructor_application")
+        self.assertIn("Omar", alert.body)
+        self.assertTrue(alert.url.startswith("/console/instructors"))
