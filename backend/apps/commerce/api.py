@@ -207,11 +207,10 @@ def orders(request, cursor: str | None = None, limit: int = 20):
 @router.get("/orders/{order_id}", response=OrderOut, auth=session_auth)
 def order(request, order_id: str):
     """Polled by the 'thank you' page until the payment webhook marks the order paid."""
-    o = get_object_or_404(
-        Order.objects.select_related("currency").prefetch_related("items__course"),
-        pk=order_id,
-        user=request.user,
-    )
+    qs = Order.objects.select_related("currency").prefetch_related("items__course")
+    o = get_object_or_404(qs, pk=order_id, user=request.user)
+    if services.sync_order_from_stripe(o):  # paid, but the webhook hasn't arrived yet
+        o = qs.get(pk=o.pk)
     return _order_out(o)
 
 

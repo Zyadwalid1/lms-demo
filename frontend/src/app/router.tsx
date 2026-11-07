@@ -48,6 +48,15 @@ const AssignPage = named(() => import('@/pages/business/AssignPage'), 'AssignPag
 const BillingPage = named(() => import('@/pages/business/BillingPage'), 'BillingPage')
 const CompanySettingsPage = named(() => import('@/pages/business/CompanySettingsPage'), 'CompanySettingsPage')
 const InvitePage = named(() => import('@/pages/InvitePage'), 'InvitePage')
+const TeachPage = named(() => import('@/pages/studio/TeachPage'), 'TeachPage')
+const StudioDashboard = named(() => import('@/pages/studio/StudioDashboard'), 'StudioDashboard')
+const StudioCoursesPage = named(() => import('@/pages/studio/StudioCoursesPage'), 'StudioCoursesPage')
+const CourseBuilderPage = named(() => import('@/pages/studio/CourseBuilderPage'), 'CourseBuilderPage')
+const StudentsPage = named(() => import('@/pages/studio/StudentsPage'), 'StudentsPage')
+const GradingPage = named(() => import('@/pages/studio/GradingPage'), 'GradingPage')
+const QuestionsPage = named(() => import('@/pages/studio/QuestionsPage'), 'QuestionsPage')
+const RevenuePage = named(() => import('@/pages/studio/RevenuePage'), 'RevenuePage')
+const PayoutsPage = named(() => import('@/pages/studio/PayoutsPage'), 'PayoutsPage')
 
 const page = (el: ReactNode) => <Suspense fallback={<PageSpinner />}>{el}</Suspense>
 const soon = (title: string, milestone: string) => <ComingSoon title={title} milestone={milestone} />
@@ -128,6 +137,7 @@ export const router = createBrowserRouter([
           { path: '/wishlist', element: page(<WishlistPage />) },
           { path: '/account/orders', element: page(<OrdersPage />), handle: { art: 'ribbons' } },
           { path: '/account', element: page(<AccountPage />), handle: { art: 'dials' } },
+          { path: '/teach', element: page(<TeachPage />), handle: { art: 'blueprint' } },
           { path: '/support', element: page(<SupportPage />), handle: { art: 'bubbles' } },
           { path: '/support/:id', element: page(<TicketPage />), handle: { art: 'bubbles' } },
         ],
@@ -175,7 +185,20 @@ export const router = createBrowserRouter([
         </RequireRole>
       </RequireAuth>
     ),
-    children: [{ path: '*', element: soon('Instructor studio', 'M4 (studio)') }, { index: true, element: soon('Instructor dashboard', 'M4 (studio)') }],
+    children: [
+      { index: true, element: page(<StudioDashboard />) },
+      { path: 'courses', element: page(<StudioCoursesPage />) },
+      // the builder's tabs are paths, so the curriculum can show its own artwork
+      { path: 'courses/:courseId', element: page(<CourseBuilderPage />) },
+      { path: 'courses/:courseId/curriculum', element: page(<CourseBuilderPage />), handle: { art: 'storyboard' } },
+      { path: 'courses/:courseId/:tab', element: page(<CourseBuilderPage />) },
+      { path: 'students', element: page(<StudentsPage />) },
+      { path: 'grading', element: page(<GradingPage />) },
+      { path: 'questions', element: page(<QuestionsPage />) },
+      { path: 'revenue', element: page(<RevenuePage />), handle: { art: 'coins' } },
+      { path: 'payouts', element: page(<PayoutsPage />), handle: { art: 'coins' } },
+      { path: '*', element: <NotFoundPage /> },
+    ],
   },
   {
     path: '/console',

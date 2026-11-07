@@ -32,6 +32,25 @@ Local Stripe webhooks: `stripe listen --forward-to localhost:8000/api/v1/commerc
 
 ---
 
+## Extra (agreed with the user, 2026-11-07): video parts, notes moments, thumbnails (built)
+Built 2026-11-07, waiting for the user's manual test.
+- API: `GET studio/media/{id}/details`, `PUT studio/media/{id}/parts`, `PUT studio/media/{id}/thumbnail`; learner lecture content has `parts` and `moments` (from Bunny, cached 10 min, refreshed on save); `PATCH learning/notes/{id}` (time, clear time, text). Tests in test_api_studio / test_api_learner.
+- Bunny thumbnails: the API can't pick a frame by second, so the picker offers Bunny's 5 frames or an https image link (file upload would stream through Django). The pull zone blocks requests without a referrer: `<img>` tags send one; **the production domain must be in Bunny's allowed referrers**.
+- Webhook fallbacks for laptops: the order poll asks Stripe for the Checkout Session, the video status poll asks Bunny (both rate-limited, same checks as the webhooks).
+1. **Instructor, in the builder's video sheet (both saved to Bunny through its API, so they show in Bunny's own player):**
+   - **Parts = Bunny chapters:** name + start time (pick from the preview or type `mm:ss`); each part runs to the next one's start.
+   - **Key moments = Bunny moments:** a label at a single second (e.g. "Key formula", "Common mistake").
+2. **Learner: the video's parts and key moments** in Bunny's player, and also listed under the video in our style (parts as a list, moments as chips); clicking one seeks the player there (player.js `setCurrentTime`, no reload).
+3. **Learner notes moments** (our style, nothing drawn in the iframe): a new note gets the current second automatically; the time can be edited by hand (`mm:ss`) before or after saving; notes are listed under the video and clicking the time seeks the video instantly. Private to the learner (notes are already private rows; needs a note-update endpoint for the time).
+4. **Thumbnail picker** in the video sheet: the frame at a given second, or an uploaded image, saved to Bunny.
+Keep Bunny's player (no custom player, no hls.js).
+
+## Curriculum redesign to mockup 12 (2026-11-07, user request)
+- The drawer is replaced by an inline editor: course content tree on the right (modules, drag + menu reorder, Add module, Bulk upload, tips), lesson editor in the centre (type list, video source upload / external link, file row, processed versions, subtitles, parts/moments/thumbnail), Lesson settings card (free preview, duration hh:mm:ss, completion %, required, Cancel / Save lesson). `?lesson=<id>` in the URL; phones show the list first.
+- API (typed, tested): `POST studio/media/videos/fetch` (Bunny fetches a direct file link; found again by a marker title, since Bunny's fetch returns no id), `POST/DELETE studio/media/{id}/captions` (.srt/.vtt up to 1 MB: **the one upload that passes through Django, approved by the user**, forwarded to Bunny, never stored), details add `resolutions` and `captions`, the editor tree's video adds `filename` and `size_bytes`.
+- Not built: prerequisite lesson (needs a migration, NEEDS-USER 3); no autosave claim.
+- Also fixed today: learner feedback showed `<p>` tags; `core.html.plain` stored `&amp;` (now stores the text); learner answers were rendered as HTML on the marking screen (stored-XSS risk, now plain text); course description uses the rich-text editor.
+
 ## M3 business (done)
 - **Screens (all `/business/*` placeholders replaced):**
   - training matrix: KPI strip, URL filters (`unit`, `role`, `status`, `req`, `q`), sticky header/column, keyset "Load more", legend; cell → side sheet with the person's requirement: Extend, Exempt / Revoke, Record completion, Void, Send reminder, history timeline; phone = list of people by worst status;

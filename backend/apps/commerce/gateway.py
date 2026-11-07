@@ -58,6 +58,12 @@ def create_checkout_session(
     return {"id": session.id, "url": session.url}
 
 
+def retrieve_checkout_session(session_id: str) -> dict:
+    s = _client().v1.checkout.sessions.retrieve(session_id)
+    return {"id": s.id, "payment_status": s.payment_status, "payment_intent": s.payment_intent or "",
+            "amount_total": s.amount_total, "currency": s.currency or "", "metadata": dict(s.metadata or {})}  # fmt: skip
+
+
 def refund(*, payment_intent: str, amount: int, idempotency_key: str) -> str:
     r = _client().v1.refunds.create(
         params={"payment_intent": payment_intent, "amount": amount},

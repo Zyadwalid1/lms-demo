@@ -11,11 +11,12 @@ reads or grades them only through a narrow, elevated context opened AFTER the co
 permission check, and only for that course.
 """
 
+import os
 import secrets
 from datetime import timedelta
 
 from django.db import transaction
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, DecimalField, F, Prefetch, Q, Sum
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.text import slugify
@@ -23,18 +24,19 @@ from ninja import Field, Router, Schema
 
 from apps.commerce.models import Coupon, CoursePrice, PriceTier
 from apps.identity.models import InstructorProfile
+from apps.identity.schemas import OkOut
 from apps.learning import services as learning
-from apps.learning.models import Enrollment, QuizAttempt, Submission
+from apps.learning.models import Enrollment, QuizAttempt, Submission, SubmissionFile
 from apps.payouts import selectors as revenue
 from apps.payouts import services as payouts
 from apps.payouts.models import Earning, Payout, PayoutAccount
-from core import html
+from core import html, storage
 from core.auth import session_auth
 from core.errors import ServiceError
 from core.permissions import OrgRole, org_scope
 from core.tenancy import tenant_context
 
-from . import bunny, resources, services
+from . import bunny, media, resources, services
 from .models import (
     Assignment,
     Course,
@@ -47,6 +49,38 @@ from .models import (
     QuizQuestion,
     Section,
     VideoLibrary,
+)
+from .studio_schemas import (
+    StudioCouponCreateOut,
+    StudioCouponOut,
+    StudioCourseCreateOut,
+    StudioCourseDetailOut,
+    StudioCourseRow,
+    StudioDashboardOut,
+    StudioDraftOut,
+    StudioEssayGradeOut,
+    StudioGradeOut,
+    StudioGradingQueueOut,
+    StudioLectureCreateOut,
+    StudioMediaStatusOut,
+    StudioPayoutAccountOut,
+    StudioPayoutAccountSetOut,
+    StudioPayoutOut,
+    StudioPriceTierOut,
+    StudioQuestionCreateOut,
+    StudioQuestionInboxOut,
+    StudioResourceDownloadOut,
+    StudioResourceOut,
+    StudioResourceUploadOut,
+    StudioRevenueOut,
+    StudioReviewInboxOut,
+    StudioSectionCreateOut,
+    StudioStatusOut,
+    StudioStudentOut,
+    StudioVideoDetailsOut,
+    StudioVideoFetchOut,
+    StudioVideoMetaOut,
+    StudioVideoUploadOut,
 )
 
 router = Router(tags=["studio"], auth=session_auth)
@@ -122,6 +156,8 @@ class CoursePatch(Schema):
     category_id: str | None = None
     thumbnail_url: str | None = Field(None, max_length=500)
     cpd_hours: float | None = Field(None, ge=0, le=500)
+    outcomes: list[str] | None = Field(None, max_length=20)
+    requirements: list[str] | None = Field(None, max_length=20)
     in_subscription: bool | None = None
     in_business: bool | None = None
 
@@ -220,6 +256,39 @@ class VideoIn(Schema):
     size_bytes: int = Field(0, ge=0, le=20 * 1024**3)
 
 
+class VideoPartIn(Schema):
+    title: str = Field(..., max_length=255)
+    start: int = Field(..., ge=0, le=86400)
+
+
+class VideoMomentIn(Schema):
+    label: str = Field(..., max_length=255)
+    timestamp: int = Field(..., ge=0, le=86400)
+
+
+class VideoPartsIn(Schema):
+    parts: list[VideoPartIn] = Field(default_factory=list, max_length=200)
+    moments: list[VideoMomentIn] = Field(default_factory=list, max_length=200)
+
+
+class ThumbnailIn(Schema):
+    choice: str = Field(..., min_length=1, max_length=500)
+
+
+class VideoFetchIn(Schema):
+    course_id: str
+    title: str = Field(..., min_length=1, max_length=200)
+    url: str = Field(..., min_length=10, max_length=2000)
+
+
+class CaptionIn(Schema):
+    srclang: str = Field(..., pattern=r"^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$")
+    label: str = Field("", max_length=60)
+    content: str = Field(
+        ..., min_length=10, max_length=1_100_000
+    )  # the .srt / .vtt text (1 MB checked as bytes)
+
+
 class SubmitIn(Schema):
     change_summary: str = Field("", max_length=2000)
     requires_recompletion: bool = False
@@ -232,8 +301,14 @@ class CouponIn(Schema):
     days: int = Field(..., ge=1, le=31)
 
 
+class RubricScoreIn(Schema):
+    criterion: str = Field(..., max_length=200)
+    points: int = Field(..., ge=0, le=1000)
+
+
 class GradeIn(Schema):
     score: int = Field(..., ge=0, le=1000)
+    rubric_scores: list[RubricScoreIn] = Field(default_factory=list, max_length=20)
     feedback: str = Field("", max_length=20000)
     return_for_resubmission: bool = False
 
@@ -258,7 +333,7 @@ class PayoutAccountIn(Schema):
 
 
 # ---------------------------------------------------------------- becoming an instructor
-@router.post("/instructor-profile")
+@router.post("/instructor-profile", response=StudioStatusOut)
 def apply_as_instructor(request, body: InstructorProfileIn):
     """Marketplace instructors are reviewed by staff before they can publish."""
     if body.website_url and not body.website_url.startswith("https://"):
@@ -269,16 +344,16 @@ def apply_as_instructor(request, body: InstructorProfileIn):
                   "website_url": body.website_url},
     )  # fmt: skip
     if not created:
-        InstructorProfile.objects.filter(pk=profile.pk).update(
-            headline=html.plain(body.headline, 160),
-            bio=html.plain(body.bio, 5000),
-            website_url=body.website_url,
-        )
+        changes = {"headline": html.plain(body.headline, 160), "bio": html.plain(body.bio, 5000),
+                   "website_url": body.website_url}  # fmt: skip
+        if profile.status == InstructorProfile.Status.REJECTED:  # applying again: back in the queue
+            changes["status"] = profile.status = InstructorProfile.Status.PENDING
+        InstructorProfile.objects.filter(pk=profile.pk).update(**changes)
     return {"status": profile.status}
 
 
 # ---------------------------------------------------------------- courses
-@router.get("/courses")
+@router.get("/courses", response=list[StudioCourseRow])
 def my_courses(request):
     ids = _my_course_ids(request)
     courses = list(
@@ -287,17 +362,24 @@ def my_courses(request):
                                                                                    "changes_requested"])))
         .order_by("-updated_at")
     )  # fmt: skip
+    # the newest open version's status: draft / in_review / changes_requested
+    open_status = {}
+    for course_id, status in (
+        CourseVersion.objects.filter(course_id__in=ids, status__in=["draft", "in_review", "changes_requested"])
+        .order_by("course_id", "-number").values_list("course_id", "status")
+    ):  # fmt: skip
+        open_status.setdefault(course_id, status)
     earned = dict(
         Earning.objects.filter(user=request.user, course_id__in=ids)
         .values("course_id").annotate(total=Sum("amount_gbp_minor")).values_list("course_id", "total")
     )  # fmt: skip
     return [{"id": c.id, "slug": c.slug, "title": c.title, "ownership": c.ownership, "status": c.status,
              "students": c.student_count, "rating_avg": float(c.rating_avg), "rating_count": c.rating_count,
-             "has_draft": c.open_versions > 0, "earned_gbp_minor": earned.get(c.id, 0), "updated_at": c.updated_at}
+             "has_draft": c.open_versions > 0, "draft_status": open_status.get(c.id), "earned_gbp_minor": earned.get(c.id, 0), "updated_at": c.updated_at}
             for c in courses]  # fmt: skip
 
 
-@router.post("/courses")
+@router.post("/courses", response=StudioCourseCreateOut)
 @transaction.atomic
 def create_course(request, body: CourseIn):
     org_id = getattr(request, "org_id", None)
@@ -338,7 +420,8 @@ def _editor_tree(version: CourseVersion) -> list:
             ]
             if lec.video_id:
                 item["video"] = {"id": lec.video.id, "status": lec.video.status, "duration_sec": lec.video.duration_sec,
-                                 "encode_progress": lec.video.encode_progress}  # fmt: skip
+                                 "encode_progress": lec.video.encode_progress,
+                                 "filename": lec.video.original_filename, "size_bytes": lec.video.size_bytes}  # fmt: skip
             if lec.kind == Lecture.Kind.QUIZ:
                 q = lec.quiz
                 item["quiz"] = {"id": q.id, "mode": q.mode, "pass_mark_pct": q.pass_mark_pct,
@@ -363,7 +446,19 @@ def _editor_tree(version: CourseVersion) -> list:
     return out
 
 
-@router.get("/courses/{course_id}")
+def _refresh_unfinished_videos(version: CourseVersion) -> None:
+    """Ask Bunny about videos still processing, so the publish checklist isn't stale when
+    Bunny's webhook can't reach us. Rate-limited per video inside sync_from_bunny."""
+    unfinished = (
+        Lecture.objects.filter(version=version, kind=Lecture.Kind.VIDEO, video__isnull=False)
+        .exclude(video__status__in=[MediaAsset.Status.READY, MediaAsset.Status.FAILED])
+        .select_related("video__library")[:20]
+    )
+    for lec in unfinished:
+        media.sync_from_bunny(lec.video)
+
+
+@router.get("/courses/{course_id}", response=StudioCourseDetailOut)
 def course(request, course_id: str):
     c = editable(request, course_id)
     versions = list(
@@ -375,10 +470,12 @@ def course(request, course_id: str):
         if (working or c.live_version_id)
         else None
     )
+    if version is not None and version.status in ("draft", "changes_requested"):
+        _refresh_unfinished_videos(version)
     price = CoursePrice.objects.filter(course=c).select_related("tier").first()
     return {
         "id": c.id, "slug": c.slug, "title": c.title, "subtitle": c.subtitle, "description": c.description,
-        "level": c.level, "category_id": c.category_id, "thumbnail_url": c.thumbnail_url, "status": c.status,
+        "level": c.level, "category_id": c.category_id, "outcomes": c.outcomes, "requirements": c.requirements, "thumbnail_url": c.thumbnail_url, "status": c.status,
         "ownership": c.ownership, "cpd_hours": float(c.cpd_hours) if c.cpd_hours else None,
         "in_subscription": c.in_subscription, "in_business": c.in_business,
         "price": {"free": price.is_free, "tier_id": price.tier_id, "tier": price.tier.name if price.tier else None,
@@ -391,21 +488,21 @@ def course(request, course_id: str):
     }  # fmt: skip
 
 
-@router.patch("/courses/{course_id}")
+@router.patch("/courses/{course_id}", response=OkOut)
 def update_course(request, course_id: str, body: CoursePatch):
     c = editable(request, course_id)
     services.update_course(course=c, **body.dict(exclude_unset=True))
     return {"ok": True}
 
 
-@router.get("/price-tiers")
+@router.get("/price-tiers", response=list[StudioPriceTierOut])
 def price_tiers(request):
     return list(
         PriceTier.objects.filter(is_active=True).order_by("sort_order").values("id", "name", "gbp_minor")
     )
 
 
-@router.put("/courses/{course_id}/price")
+@router.put("/courses/{course_id}/price", response=OkOut)
 def set_price(request, course_id: str, body: PriceIn):
     c = editable(request, course_id)
     if c.ownership == Course.Ownership.ORGANIZATION:
@@ -416,23 +513,24 @@ def set_price(request, course_id: str, body: PriceIn):
     return {"ok": True}
 
 
-@router.post("/courses/{course_id}/draft")
+@router.post("/courses/{course_id}/draft", response=StudioDraftOut)
 def new_draft(request, course_id: str):
     c = editable(request, course_id)
     v = services.create_draft(course=c, by=request.user)
     return {"version_id": v.id, "number": v.number}
 
 
-@router.post("/versions/{version_id}/submit")
+@router.post("/versions/{version_id}/submit", response=StudioStatusOut)
 def submit(request, version_id: str, body: SubmitIn):
     v = _version(request, version_id)
+    _refresh_unfinished_videos(v)
     v = services.submit(version=v, by=request.user, change_summary=html.plain(body.change_summary, 2000),
                         requires_recompletion=body.requires_recompletion)  # fmt: skip
     return {"status": v.status}
 
 
 # ---------------------------------------------------------------- curriculum
-@router.post("/versions/{version_id}/sections")
+@router.post("/versions/{version_id}/sections", response=StudioSectionCreateOut)
 def add_section(request, version_id: str, body: SectionIn):
     v = _version(request, version_id)
     s = services.add_section(
@@ -441,13 +539,13 @@ def add_section(request, version_id: str, body: SectionIn):
     return {"id": s.id, "position": s.position}
 
 
-@router.put("/versions/{version_id}/sections/order")
+@router.put("/versions/{version_id}/sections/order", response=OkOut)
 def order_sections(request, version_id: str, body: OrderIn):
     services.reorder_sections(version=_version(request, version_id), ids=body.ids)
     return {"ok": True}
 
 
-@router.patch("/sections/{section_id}")
+@router.patch("/sections/{section_id}", response=OkOut)
 def update_section(request, section_id: str, body: SectionIn):
     services.update_section(
         section=_section(request, section_id), title=body.title, description=body.description
@@ -455,13 +553,13 @@ def update_section(request, section_id: str, body: SectionIn):
     return {"ok": True}
 
 
-@router.delete("/sections/{section_id}")
+@router.delete("/sections/{section_id}", response=OkOut)
 def delete_section(request, section_id: str):
     services.delete_section(section=_section(request, section_id))
     return {"ok": True}
 
 
-@router.post("/sections/{section_id}/lectures")
+@router.post("/sections/{section_id}/lectures", response=StudioLectureCreateOut)
 def add_lecture(request, section_id: str, body: LectureIn):
     s = _section(request, section_id)
     if body.kind not in Lecture.Kind.values:
@@ -473,25 +571,25 @@ def add_lecture(request, section_id: str, body: LectureIn):
     return {"id": lec.id, "key": lec.lecture_key}
 
 
-@router.put("/sections/{section_id}/lectures/order")
+@router.put("/sections/{section_id}/lectures/order", response=OkOut)
 def order_lectures(request, section_id: str, body: OrderIn):
     services.reorder_lectures(section=_section(request, section_id), ids=body.ids)
     return {"ok": True}
 
 
-@router.patch("/lectures/{lecture_id}")
+@router.patch("/lectures/{lecture_id}", response=OkOut)
 def update_lecture(request, lecture_id: str, body: LecturePatch):
     services.update_lecture(lecture=_lecture(request, lecture_id), **body.dict(exclude_unset=True))
     return {"ok": True}
 
 
-@router.delete("/lectures/{lecture_id}")
+@router.delete("/lectures/{lecture_id}", response=OkOut)
 def delete_lecture(request, lecture_id: str):
     services.delete_lecture(lecture=_lecture(request, lecture_id))
     return {"ok": True}
 
 
-@router.patch("/quizzes/{quiz_id}")
+@router.patch("/quizzes/{quiz_id}", response=OkOut)
 def update_quiz(request, quiz_id: str, body: QuizPatch):
     q = get_object_or_404(Quiz.objects.select_related("lecture__version"), pk=quiz_id)
     editable(request, q.lecture.version.course_id)
@@ -499,7 +597,7 @@ def update_quiz(request, quiz_id: str, body: QuizPatch):
     return {"ok": True}
 
 
-@router.post("/quizzes/{quiz_id}/questions")
+@router.post("/quizzes/{quiz_id}/questions", response=StudioQuestionCreateOut)
 def add_question(request, quiz_id: str, body: QuizQuestionIn):
     q = get_object_or_404(Quiz.objects.select_related("lecture__version"), pk=quiz_id)
     editable(request, q.lecture.version.course_id)
@@ -510,7 +608,7 @@ def add_question(request, quiz_id: str, body: QuizQuestionIn):
     return {"id": question.id}
 
 
-@router.put("/questions/{question_id}")
+@router.put("/questions/{question_id}", response=OkOut)
 def replace_question(request, question_id: str, body: QuizQuestionIn):
     question = get_object_or_404(
         QuizQuestion.objects.select_related("quiz__lecture__version"), pk=question_id
@@ -521,7 +619,7 @@ def replace_question(request, question_id: str, body: QuizQuestionIn):
     return {"ok": True}
 
 
-@router.delete("/questions/{question_id}")
+@router.delete("/questions/{question_id}", response=OkOut)
 def delete_question(request, question_id: str):
     question = get_object_or_404(
         QuizQuestion.objects.select_related("quiz__lecture__version"), pk=question_id
@@ -531,7 +629,7 @@ def delete_question(request, question_id: str):
     return {"ok": True}
 
 
-@router.patch("/assignments/{assignment_id}")
+@router.patch("/assignments/{assignment_id}", response=OkOut)
 def update_assignment(request, assignment_id: str, body: AssignmentPatch):
     a = get_object_or_404(Assignment.objects.select_related("lecture__version"), pk=assignment_id)
     editable(request, a.lecture.version.course_id)
@@ -551,7 +649,7 @@ def _resource(request, resource_id) -> LectureResource:
     return r
 
 
-@router.post("/lectures/{lecture_id}/resources/uploads")
+@router.post("/lectures/{lecture_id}/resources/uploads", response=StudioResourceUploadOut)
 def start_resource_upload(request, lecture_id: str, body: ResourceUploadIn):
     """1) a write-only link for one file, 2) the browser PUTs the file to Azure,
     3) POST /lectures/{id}/resources attaches it after we check what arrived."""
@@ -559,31 +657,31 @@ def start_resource_upload(request, lecture_id: str, body: ResourceUploadIn):
                                   filename=body.filename, size_bytes=body.size_bytes)  # fmt: skip
 
 
-@router.post("/lectures/{lecture_id}/resources")
+@router.post("/lectures/{lecture_id}/resources", response=StudioResourceOut)
 def attach_resource(request, lecture_id: str, body: ResourceIn):
     r = resources.attach(lecture=_lecture(request, lecture_id), user=request.user, asset_id=body.asset_id,
                          title=body.title)  # fmt: skip
     return resources.payload(r)
 
 
-@router.patch("/resources/{resource_id}")
+@router.patch("/resources/{resource_id}", response=StudioResourceOut)
 def rename_resource(request, resource_id: str, body: ResourcePatch):
     return resources.payload(resources.rename(resource=_resource(request, resource_id), title=body.title))
 
 
-@router.delete("/resources/{resource_id}")
+@router.delete("/resources/{resource_id}", response=OkOut)
 def delete_resource(request, resource_id: str):
     resources.remove(resource=_resource(request, resource_id))
     return {"ok": True}
 
 
-@router.get("/resources/{resource_id}/download")
+@router.get("/resources/{resource_id}/download", response=StudioResourceDownloadOut)
 def preview_resource(request, resource_id: str):
     return {"url": resources.download_url(_resource(request, resource_id)), "expires_in": 3600}
 
 
 # ---------------------------------------------------------------- video uploads
-@router.post("/media/videos")
+@router.post("/media/videos", response=StudioVideoUploadOut)
 def start_video_upload(request, body: VideoIn):
     """1) we create the video at Bunny, 2) the browser uploads the file directly with the
     returned TUS session, 3) Bunny's signed webhook moves the asset to 'ready'."""
@@ -598,26 +696,105 @@ def start_video_upload(request, body: VideoIn):
     return {"asset_id": asset.id, "upload": bunny.upload_session(library, guid)}
 
 
-@router.get("/media/{asset_id}")
+def _video(request, asset_id, *, write=False) -> MediaAsset:
+    """A video the caller may see: its uploader, or an editor of a course that uses it.
+    Changes to a video a course uses need edit rights on that course."""
+    a = get_object_or_404(MediaAsset.objects.select_related("library"), pk=asset_id, kind="video")
+    lec = Lecture.objects.filter(video=a).select_related("version").first()
+    if lec is not None and (write or a.uploaded_by_id != request.user.id):
+        editable(request, lec.version.course_id)
+    elif lec is None and a.uploaded_by_id != request.user.id:
+        raise ServiceError("not_found", "Video not found.", status=404)
+    return a
+
+
+def _bunny_video(request, asset_id, *, write=False) -> MediaAsset:
+    a = _video(request, asset_id, write=write)
+    if not a.bunny_video_guid or a.library is None:
+        raise ServiceError("video_unavailable", "This video isn't on the video service.", status=409)
+    return a
+
+
+@router.get("/media/{asset_id}/details", response=StudioVideoDetailsOut)
+def video_details(request, asset_id: str):
+    """Parts, key moments and thumbnails for the builder's video sheet."""
+    a = _bunny_video(request, asset_id)
+    return {**media.video_meta(a), "duration_sec": a.duration_sec, "thumbnails": media.thumbnails(a)}
+
+
+@router.put("/media/{asset_id}/parts", response=StudioVideoMetaOut)
+def save_video_parts(request, asset_id: str, body: VideoPartsIn):
+    a = _bunny_video(request, asset_id, write=True)
+    return media.save_parts_and_moments(
+        a, parts=[p.dict() for p in body.parts], moments=[m.dict() for m in body.moments]
+    )
+
+
+@router.put("/media/{asset_id}/thumbnail", response=OkOut)
+def set_video_thumbnail(request, asset_id: str, body: ThumbnailIn):
+    media.set_thumbnail(_bunny_video(request, asset_id, write=True), body.choice.strip())
+    return {"ok": True}
+
+
+@router.post("/media/{asset_id}/captions", response=OkOut)
+def add_video_caption(request, asset_id: str, body: CaptionIn):
+    media.add_caption(_bunny_video(request, asset_id, write=True), srclang=body.srclang, label=body.label,
+                      content=body.content)  # fmt: skip
+    return {"ok": True}
+
+
+@router.delete("/media/{asset_id}/captions/{srclang}", response=OkOut)
+def delete_video_caption(request, asset_id: str, srclang: str):
+    media.delete_caption(_bunny_video(request, asset_id, write=True), srclang)
+    return {"ok": True}
+
+
+@router.get("/media/{asset_id}", response=StudioMediaStatusOut)
 def media_status(request, asset_id: str):
-    a = get_object_or_404(MediaAsset, pk=asset_id, uploaded_by=request.user)
+    """Processing status, plus a signed preview link once Bunny can play it."""
+    a = media.sync_from_bunny(_video(request, asset_id))  # in case Bunny's webhook can't reach us
+    play = media.playback(a) if a.status in (MediaAsset.Status.PLAYABLE, MediaAsset.Status.READY) else None
     return {
         "id": a.id,
         "status": a.status,
         "encode_progress": a.encode_progress,
         "duration_sec": a.duration_sec,
+        "preview_url": play["url"] if play else None,
     }
 
 
+@router.post("/media/videos/fetch", response=StudioVideoFetchOut)
+def fetch_video_from_link(request, body: VideoFetchIn):
+    """An external video link (a direct file URL): Bunny downloads and hosts it, so it
+    plays, is tracked and protected exactly like an upload."""
+    c = editable(request, body.course_id)
+    url = body.url.strip()
+    if not url.startswith("https://"):
+        raise ServiceError("bad_url", "Use an https:// link to the video file.")
+    library = VideoLibrary.objects.filter(is_default=True).first()
+    if library is None:
+        raise ServiceError("video_unavailable", "Video uploads are not configured.", status=503)
+    marker = f"lh-{secrets.token_hex(8)}"
+    guid = bunny.fetch_video(library, url, marker)
+    asset = services.create_media(kind="video", status="processing", library=library, uploaded_by=request.user,
+                                  owner_org_id=c.owner_org_id, bunny_video_guid=guid,
+                                  original_filename=html.plain(url.rsplit("/", 1)[-1], 255))  # fmt: skip
+    try:  # give it its real title (the marker only served to find it)
+        bunny.rename_video(library, guid, html.plain(body.title, 200))
+    except ServiceError:
+        pass  # cosmetic: the title in Bunny's dashboard only
+    return {"asset_id": asset.id}
+
+
 # ---------------------------------------------------------------- coupons
-@router.get("/courses/{course_id}/coupons")
+@router.get("/courses/{course_id}/coupons", response=list[StudioCouponOut])
 def coupons(request, course_id: str):
     c = editable(request, course_id)
     return list(Coupon.objects.filter(course=c).order_by("-created_at").values(
         "id", "code", "percent_off", "max_redemptions", "redeemed_count", "starts_at", "ends_at", "is_active"))  # fmt: skip
 
 
-@router.post("/courses/{course_id}/coupons")
+@router.post("/courses/{course_id}/coupons", response=StudioCouponCreateOut)
 def create_coupon(request, course_id: str, body: CouponIn):
     c = editable(request, course_id)
     if c.ownership != Course.Ownership.INSTRUCTOR:
@@ -631,7 +808,7 @@ def create_coupon(request, course_id: str, body: CouponIn):
     return {"id": cp.id, "code": cp.code}
 
 
-@router.delete("/coupons/{coupon_id}")
+@router.delete("/coupons/{coupon_id}", response=OkOut)
 def deactivate_coupon(request, coupon_id: str):
     cp = get_object_or_404(Coupon, pk=coupon_id, course__isnull=False)
     editable(request, cp.course_id)
@@ -640,7 +817,7 @@ def deactivate_coupon(request, coupon_id: str):
 
 
 # ---------------------------------------------------------------- students, inbox & grading
-@router.get("/courses/{course_id}/students")
+@router.get("/courses/{course_id}/students", response=list[StudioStudentOut])
 def students(request, course_id: str, limit: int = 200):
     """Personal learners only: company learners' progress belongs to their company."""
     c = editable(request, course_id)
@@ -653,7 +830,7 @@ def students(request, course_id: str, limit: int = 200):
                  "enrolled_at": e.enrolled_at, "last_accessed_at": e.last_accessed_at} for e in rows]  # fmt: skip
 
 
-@router.get("/questions")
+@router.get("/questions", response=list[StudioQuestionInboxOut])
 def question_inbox(request, unanswered: bool = True, limit: int = 50):
     from apps.engagement.models import Question
 
@@ -661,11 +838,12 @@ def question_inbox(request, unanswered: bool = True, limit: int = 50):
     if unanswered:
         qs = qs.filter(has_instructor_answer=False)
     rows = qs.select_related("user", "course").order_by("-created_at")[: max(1, min(limit, 200))]
-    return [{"id": q.id, "course_title": q.course.title, "title": q.title, "author": q.user.full_name,
-             "answer_count": q.answer_count, "created_at": q.created_at} for q in rows]  # fmt: skip
+    return [{"id": q.id, "course_id": q.course_id, "course_title": q.course.title, "title": q.title, "body": q.body,
+             "author": q.user.full_name, "answer_count": q.answer_count,
+             "has_instructor_answer": q.has_instructor_answer, "created_at": q.created_at} for q in rows]  # fmt: skip
 
 
-@router.get("/reviews")
+@router.get("/reviews", response=list[StudioReviewInboxOut])
 def review_inbox(request, unreplied: bool = False, limit: int = 50):
     from apps.engagement.models import Review
 
@@ -673,11 +851,11 @@ def review_inbox(request, unreplied: bool = False, limit: int = 50):
     if unreplied:
         qs = qs.filter(replied_at__isnull=True)
     rows = qs.select_related("user", "course").order_by("-created_at")[: max(1, min(limit, 200))]
-    return [{"id": r.id, "course_title": r.course.title, "rating": r.rating, "body": r.body, "author": r.user.full_name,
+    return [{"id": r.id, "course_id": r.course_id, "course_title": r.course.title, "rating": r.rating, "body": r.body, "author": r.user.full_name,
              "instructor_reply": r.instructor_reply, "created_at": r.created_at} for r in rows]  # fmt: skip
 
 
-@router.get("/grading")
+@router.get("/grading", response=StudioGradingQueueOut)
 def grading_queue(request):
     """Assignments and essay answers waiting for the instructor, across my courses."""
     ids = _my_course_ids(request)
@@ -685,25 +863,34 @@ def grading_queue(request):
         subs = (
             Submission.objects.filter(enrollment__course_id__in=ids, status="submitted")
             .select_related("enrollment__user", "enrollment__course", "assignment__lecture")
+            .prefetch_related("files__asset")
             .order_by("submitted_at")[:200]
         )
         attempts = (
             QuizAttempt.objects.filter(enrollment__course_id__in=ids, status="needs_grading")
             .select_related("enrollment__user", "enrollment__course", "quiz__lecture")
+            .prefetch_related(Prefetch("quiz__questions", queryset=QuizQuestion.objects.filter(kind="essay")))
             .order_by("submitted_at")[:200]
         )
         return {
             "submissions": [{"id": s.id, "learner": s.enrollment.user.full_name, "course": s.enrollment.course.title,
                              "lecture": s.assignment.lecture.title, "attempt_no": s.attempt_no, "text": s.text_body,
                              "url": s.url, "submitted_at": s.submitted_at, "is_late": s.is_late,
-                             "max_score": s.assignment.max_score, "rubric": s.assignment.rubric} for s in subs],
+                             "course_id": s.enrollment.course_id,
+                             "max_score": s.assignment.max_score, "pass_score": s.assignment.pass_score,
+                             "rubric": s.assignment.rubric,
+                             "files": [{"id": f.id, "filename": f.asset.original_filename,
+                                        "size_bytes": f.asset.size_bytes} for f in s.files.all()]} for s in subs],
             "attempts": [{"id": a.id, "learner": a.enrollment.user.full_name, "course": a.enrollment.course.title,
                           "quiz": a.quiz.lecture.title, "submitted_at": a.submitted_at, "answers": a.answers,
-                          "results": a.results} for a in attempts],
+                          "results": a.results, "course_id": a.enrollment.course_id,
+                          "essays": [{"id": q.id, "prompt": q.prompt, "points": q.points}
+                                     for q in sorted(a.quiz.questions.all(), key=lambda q: q.position)]}
+                         for a in attempts],
         }  # fmt: skip
 
 
-@router.post("/submissions/{submission_id}/grade")
+@router.post("/submissions/{submission_id}/grade", response=StudioGradeOut)
 def grade_submission(request, submission_id: str, body: GradeIn):
     with _instructor_view(request):
         sub = get_object_or_404(Submission.objects.select_related("enrollment"), pk=submission_id)
@@ -711,11 +898,27 @@ def grade_submission(request, submission_id: str, body: GradeIn):
     with _instructor_view(request):
         sub = learning.grade_submission(submission=sub, score=body.score, grader=request.user,
                                         feedback=html.clean(body.feedback, 20000),
+                                        rubric_scores=[{"criterion": html.plain(r.criterion, 200), "points": r.points}
+                                                       for r in body.rubric_scores],
                                         return_for_resubmission=body.return_for_resubmission)  # fmt: skip
     return {"status": sub.status, "passed": sub.passed}
 
 
-@router.post("/attempts/{attempt_id}/grade")
+@router.get("/submission-files/{file_id}/download", response=StudioResourceDownloadOut)
+def submission_file(request, file_id: str):
+    """A short-lived read link for a learner's hand-in, after the course check."""
+    with _instructor_view(request):
+        f = get_object_or_404(
+            SubmissionFile.objects.select_related("submission__enrollment", "asset"), pk=file_id
+        )
+    editable(request, f.submission.enrollment.course_id)
+    if not storage.configured():
+        raise ServiceError("files_unavailable", "File storage is not configured.", status=503)
+    key = f.asset.storage_key
+    return {"url": storage.download_url(key, os.path.basename(key)), "expires_in": 3600}  # slugified name
+
+
+@router.post("/attempts/{attempt_id}/grade", response=StudioEssayGradeOut)
 def grade_essay(request, attempt_id: str, body: EssayGradeIn):
     with _instructor_view(request):
         attempt = get_object_or_404(QuizAttempt.objects.select_related("enrollment"), pk=attempt_id)
@@ -726,20 +929,50 @@ def grade_essay(request, attempt_id: str, body: EssayGradeIn):
     return {"status": attempt.status, "passed": attempt.passed, "score_pct": float(attempt.score_pct or 0)}
 
 
+# ---------------------------------------------------------------- dashboard
+@router.get("/dashboard", response=StudioDashboardOut)
+def dashboard(request):
+    """The studio home's KPIs: a handful of aggregate queries, no per-course loops."""
+    from apps.engagement.models import Question
+
+    ids = _my_course_ids(request)
+    agg = Course.objects.filter(pk__in=ids, deleted_at__isnull=True).aggregate(
+        students=Sum("student_count"), ratings=Sum("rating_count"),
+        weighted=Sum(F("rating_avg") * F("rating_count"), output_field=DecimalField()),
+        courses=Count("id"), live=Count("id", filter=Q(status="published")),
+    )  # fmt: skip
+    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    month = Earning.objects.filter(user=request.user, earned_at__gte=month_start).aggregate(
+        t=Sum("amount_gbp_minor")
+    )
+    with _instructor_view(request):
+        to_mark = (
+            Submission.objects.filter(enrollment__course_id__in=ids, status="submitted").count()
+            + QuizAttempt.objects.filter(enrollment__course_id__in=ids, status="needs_grading").count()
+        )
+    unanswered = Question.objects.filter(
+        course_id__in=ids, hidden_at__isnull=True, has_instructor_answer=False
+    ).count()
+    ratings = agg["ratings"] or 0
+    return {"courses": agg["courses"], "published": agg["live"], "students": agg["students"] or 0,
+            "rating_avg": round(float(agg["weighted"] or 0) / ratings, 2) if ratings else 0.0, "rating_count": ratings,
+            "earned_this_month_gbp_minor": month["t"] or 0, "to_mark": to_mark, "unanswered": unanswered}  # fmt: skip
+
+
 # ---------------------------------------------------------------- revenue & payouts
-@router.get("/revenue")
+@router.get("/revenue", response=StudioRevenueOut)
 def my_revenue(request):
     return {"balance": revenue.balance(user_id=request.user.id), "by_month": revenue.by_month(user_id=request.user.id),
             "by_course": list(revenue.by_course(user_id=request.user.id)[:100])}  # fmt: skip
 
 
-@router.get("/payouts")
+@router.get("/payouts", response=list[StudioPayoutOut])
 def my_payouts(request):
     return list(Payout.objects.filter(user=request.user).order_by("-period_end").values(
         "id", "period_end", "amount_gbp_minor", "status", "method", "paid_at", "failure_reason")[:60])  # fmt: skip
 
 
-@router.get("/payout-account")
+@router.get("/payout-account", response=StudioPayoutAccountOut)
 def payout_account(request):
     a = PayoutAccount.objects.filter(user=request.user).first()
     if a is None:
@@ -749,7 +982,7 @@ def payout_account(request):
             "verified": a.verified_at is not None, "stripe_connected": bool(a.stripe_account_id)}  # fmt: skip
 
 
-@router.put("/payout-account")
+@router.put("/payout-account", response=StudioPayoutAccountSetOut)
 def set_payout_account(request, body: PayoutAccountIn):
     if body.method not in PayoutAccount.Method.values:
         raise ServiceError("bad_method", "Choose Stripe or PayPal.")

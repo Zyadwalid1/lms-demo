@@ -8,9 +8,11 @@ Money rules:
   * fulfilment is idempotent: a webhook delivered twice enrols once.
 """
 
+import logging
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Case, F, PositiveIntegerField, Q, When
 from django.utils import timezone
@@ -39,6 +41,8 @@ from .models import (
     WishlistItem,
 )
 from .signals import notify_item_refunded, notify_order_paid
+
+log = logging.getLogger(__name__)
 
 PAID_ACCESS = (Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED)
 
@@ -252,6 +256,34 @@ def fulfil_order(
     CartItem.objects.filter(user_id=order.user_id, course_id__in=order.items.values("course_id")).delete()
     notify_order_paid(order.id)
     return order
+
+
+def sync_order_from_stripe(order: Order) -> bool:
+    """The thank-you page's fallback when the webhook is late or can't reach us (e.g. a
+    laptop without the Stripe CLI): ask Stripe about the order's Checkout Session and
+    fulfil it if it's paid. Same checks as the webhook; at most once per 5 s per order."""
+    if order.status != Order.Status.PENDING or not order.stripe_session_id:
+        return False
+    if not cache.add(f"order-sync:{order.id}", 1, timeout=5):
+        return False
+    try:
+        s = gateway.retrieve_checkout_session(order.stripe_session_id)
+    except Exception:  # Stripe down or not configured: the webhook still completes it later
+        log.warning("order %s: could not check its Checkout Session", order.id, exc_info=True)
+        return False
+    meta = s.get("metadata") or {}
+    if s.get("payment_status") != "paid" or meta.get("kind") != "order" or meta.get("id") != str(order.id):
+        return False
+    from core.tenancy import tenant_context
+
+    try:
+        with tenant_context(staff=True):  # the same platform context the webhook uses
+            fulfil_order(order_id=order.id, payment_intent=s.get("payment_intent") or "",
+                         amount_minor=s.get("amount_total"), currency=s.get("currency") or "")  # fmt: skip
+    except ServiceError:  # e.g. an amount mismatch: left for the webhook's error log to surface
+        log.warning("order %s: paid session refused", order.id, exc_info=True)
+        return False
+    return True
 
 
 def _raise_limit_if_needed():

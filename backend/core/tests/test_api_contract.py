@@ -23,7 +23,7 @@ class ApiContractTest(SimpleTestCase):
             for path in files:
                 if "migrations" in path.parts or "tests" in path.parts:
                     continue
-                for node in ast.walk(ast.parse(path.read_text())):
+                for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
                     if isinstance(node, ast.ClassDef) and any(
                         getattr(b, "id", None) in known for b in node.bases
                     ):
@@ -31,7 +31,7 @@ class ApiContractTest(SimpleTestCase):
         for path in files:
             if "migrations" in path.parts or "tests" in path.parts:
                 continue
-            for node in ast.walk(ast.parse(path.read_text())):
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
                 if isinstance(node, ast.ClassDef) and any(
                     getattr(b, "id", None) in known for b in node.bases
                 ):
@@ -47,6 +47,7 @@ TYPED_PREFIXES = (
     "/api/v1/commerce/", "/api/v1/catalog/", "/api/v1/compliance/dashboard", "/api/v1/compliance/summary",  # M1
     "/api/v1/learning/", "/api/v1/engagement/", "/api/v1/identity/", "/api/v1/compliance/my",  # M2
     "/api/v1/org/", "/api/v1/compliance/",  # M3
+    "/api/v1/studio/",  # M4
 )  # fmt: skip
 NOT_JSON = {  # files and webhooks
     "/api/v1/commerce/webhooks/stripe",

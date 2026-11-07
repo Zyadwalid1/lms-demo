@@ -721,7 +721,11 @@ export interface paths {
         delete: operations["apps_learning_api_delete_note"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Note
+         * @description Change a note's text or the moment of the video it is pinned to.
+         */
+        patch: operations["apps_learning_api_update_note"];
         trace?: never;
     };
     "/api/v1/learning/my/certificates": {
@@ -2090,6 +2094,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/studio/media/{asset_id}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Video Details
+         * @description Parts, key moments and thumbnails for the builder's video sheet.
+         */
+        get: operations["apps_catalog_studio_video_details"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studio/media/{asset_id}/parts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save Video Parts */
+        put: operations["apps_catalog_studio_save_video_parts"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studio/media/{asset_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Video Thumbnail */
+        put: operations["apps_catalog_studio_set_video_thumbnail"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studio/media/{asset_id}/captions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Video Caption */
+        post: operations["apps_catalog_studio_add_video_caption"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studio/media/{asset_id}/captions/{srclang}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Video Caption */
+        delete: operations["apps_catalog_studio_delete_video_caption"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/studio/media/{asset_id}": {
         parameters: {
             query?: never;
@@ -2097,10 +2189,34 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Media Status */
+        /**
+         * Media Status
+         * @description Processing status, plus a signed preview link once Bunny can play it.
+         */
         get: operations["apps_catalog_studio_media_status"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studio/media/videos/fetch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fetch Video From Link
+         * @description An external video link (a direct file URL): Bunny downloads and hosts it, so it
+         *     plays, is tracked and protected exactly like an upload.
+         */
+        post: operations["apps_catalog_studio_fetch_video_from_link"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2233,6 +2349,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/studio/submission-files/{file_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Submission File
+         * @description A short-lived read link for a learner's hand-in, after the course check.
+         */
+        get: operations["apps_catalog_studio_submission_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/studio/attempts/{attempt_id}/grade": {
         parameters: {
             query?: never;
@@ -2244,6 +2380,26 @@ export interface paths {
         put?: never;
         /** Grade Essay */
         post: operations["apps_catalog_studio_grade_essay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studio/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard
+         * @description The studio home's KPIs: a handful of aggregate queries, no per-course loops.
+         */
+        get: operations["apps_catalog_studio_dashboard"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3110,6 +3266,8 @@ export interface components {
             preferred_currency: string;
             /** Is Instructor */
             is_instructor: boolean;
+            /** Instructor Status */
+            instructor_status: string;
             /** Memberships */
             memberships: components["schemas"]["MembershipOut"][];
         };
@@ -3915,6 +4073,16 @@ export interface components {
              */
             external_url: string;
             video?: components["schemas"]["PlaybackOut"] | null;
+            /**
+             * Parts
+             * @default []
+             */
+            parts: components["schemas"]["VideoPartOut"][];
+            /**
+             * Moments
+             * @default []
+             */
+            moments: components["schemas"]["VideoMomentOut"][];
             live?: components["schemas"]["LiveOut"] | null;
             /**
              * Resources
@@ -4027,6 +4195,26 @@ export interface components {
             filename: string;
             /** Size Bytes */
             size_bytes: number | null;
+        };
+        /**
+         * VideoMomentOut
+         * @description A key moment the instructor marked in a video (a Bunny moment).
+         */
+        VideoMomentOut: {
+            /** Label */
+            label: string;
+            /** Timestamp */
+            timestamp: number;
+        };
+        /**
+         * VideoPartOut
+         * @description A named part of a video (a Bunny chapter): from `start` to the next part.
+         */
+        VideoPartOut: {
+            /** Title */
+            title: string;
+            /** Start */
+            start: number;
         };
         /** DownloadOut */
         DownloadOut: {
@@ -4233,6 +4421,18 @@ export interface components {
             timestamp_sec?: number | null;
             /** Body */
             body: string;
+        };
+        /** NotePatchIn */
+        NotePatchIn: {
+            /** Timestamp Sec */
+            timestamp_sec?: number | null;
+            /**
+             * Clear Timestamp
+             * @default false
+             */
+            clear_timestamp: boolean;
+            /** Body */
+            body?: string | null;
         };
         /** CertificateOut */
         CertificateOut: {
@@ -5518,6 +5718,11 @@ export interface components {
              */
             closed_at: string;
         };
+        /** StudioStatusOut */
+        StudioStatusOut: {
+            /** Status */
+            status: string;
+        };
         /** InstructorProfileIn */
         InstructorProfileIn: {
             /** Headline */
@@ -5533,12 +5738,321 @@ export interface components {
              */
             website_url: string;
         };
+        /** StudioCourseRow */
+        StudioCourseRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+            /** Ownership */
+            ownership: string;
+            /** Status */
+            status: string;
+            /** Students */
+            students: number;
+            /** Rating Avg */
+            rating_avg: number;
+            /** Rating Count */
+            rating_count: number;
+            /** Has Draft */
+            has_draft: boolean;
+            /** Draft Status */
+            draft_status?: string | null;
+            /** Earned Gbp Minor */
+            earned_gbp_minor: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** StudioCourseCreateOut */
+        StudioCourseCreateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+        };
         /** CourseIn */
         CourseIn: {
             /** Title */
             title: string;
             /** Category Id */
             category_id?: string | null;
+        };
+        /** StudioCourseDetailOut */
+        StudioCourseDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+            /** Subtitle */
+            subtitle: string;
+            /** Description */
+            description: string;
+            /** Level */
+            level: string;
+            /** Category Id */
+            category_id?: string | null;
+            /** Outcomes */
+            outcomes: string[];
+            /** Requirements */
+            requirements: string[];
+            /** Thumbnail Url */
+            thumbnail_url: string;
+            /** Status */
+            status: string;
+            /** Ownership */
+            ownership: string;
+            /** Cpd Hours */
+            cpd_hours?: number | null;
+            /** In Subscription */
+            in_subscription: boolean;
+            /** In Business */
+            in_business: boolean;
+            price?: components["schemas"]["StudioCoursePriceOut"] | null;
+            /** Versions */
+            versions: components["schemas"]["StudioVersionSummaryOut"][];
+            working_version?: components["schemas"]["StudioWorkingVersionOut"] | null;
+        };
+        /** StudioCoursePriceOut */
+        StudioCoursePriceOut: {
+            /** Free */
+            free: boolean;
+            /** Tier Id */
+            tier_id?: string | null;
+            /** Tier */
+            tier?: string | null;
+            /** Gbp Minor */
+            gbp_minor: number;
+        };
+        /** StudioEditorAssignmentOut */
+        StudioEditorAssignmentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Instructions */
+            instructions: string;
+            /** Max Score */
+            max_score: number;
+            /** Pass Score */
+            pass_score: number;
+            /** Rubric */
+            rubric: {
+                [key: string]: unknown;
+            }[];
+            /** Due Days After Enrolment */
+            due_days_after_enrolment?: number | null;
+            /** Allow Late */
+            allow_late: boolean;
+            /** Max Resubmissions */
+            max_resubmissions: number;
+            /** Submission Types */
+            submission_types: string[];
+        };
+        /** StudioEditorLectureOut */
+        StudioEditorLectureOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Key
+             * Format: uuid
+             */
+            key: string;
+            /** Kind */
+            kind: string;
+            /** Title */
+            title: string;
+            /** Position */
+            position: number;
+            /** Is Preview */
+            is_preview: boolean;
+            /** Is Required */
+            is_required: boolean;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Body */
+            body: string;
+            /** External Url */
+            external_url: string;
+            /** Live Starts At */
+            live_starts_at?: string | null;
+            /** Live Duration Min */
+            live_duration_min?: number | null;
+            /** Live Join Url */
+            live_join_url: string;
+            /** Min Watch Pct */
+            min_watch_pct: number;
+            /** Resources */
+            resources: components["schemas"]["StudioEditorResourceOut"][];
+            video?: components["schemas"]["StudioEditorVideoOut"] | null;
+            quiz?: components["schemas"]["StudioEditorQuizOut"] | null;
+            assignment?: components["schemas"]["StudioEditorAssignmentOut"] | null;
+        };
+        /** StudioEditorOptionOut */
+        StudioEditorOptionOut: {
+            /** Body */
+            body: string;
+            /** Is Correct */
+            is_correct: boolean;
+            /** Match Text */
+            match_text: string;
+            /** Blank Index */
+            blank_index: number;
+        };
+        /** StudioEditorQuestionOut */
+        StudioEditorQuestionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Prompt */
+            prompt: string;
+            /** Points */
+            points: number;
+            /** Explanation */
+            explanation: string;
+            /** Options */
+            options: components["schemas"]["StudioEditorOptionOut"][];
+        };
+        /** StudioEditorQuizOut */
+        StudioEditorQuizOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mode */
+            mode: string;
+            /** Pass Mark Pct */
+            pass_mark_pct: number;
+            /** Time Limit Sec */
+            time_limit_sec?: number | null;
+            /** Max Attempts */
+            max_attempts?: number | null;
+            /** Shuffle Questions */
+            shuffle_questions: boolean;
+            /** Shuffle Options */
+            shuffle_options: boolean;
+            /** Reveal Answers */
+            reveal_answers: string;
+            /** Questions */
+            questions: components["schemas"]["StudioEditorQuestionOut"][];
+        };
+        /** StudioEditorResourceOut */
+        StudioEditorResourceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Position */
+            position: number;
+            /** Kind */
+            kind: string;
+            /** Filename */
+            filename: string;
+            /** Size Bytes */
+            size_bytes?: number | null;
+            /** Mime Type */
+            mime_type: string;
+        };
+        /** StudioEditorSectionOut */
+        StudioEditorSectionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Description */
+            description: string;
+            /** Position */
+            position: number;
+            /** Lectures */
+            lectures: components["schemas"]["StudioEditorLectureOut"][];
+        };
+        /** StudioEditorVideoOut */
+        StudioEditorVideoOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Status */
+            status: string;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Encode Progress */
+            encode_progress: number;
+            /**
+             * Filename
+             * @default
+             */
+            filename: string;
+            /**
+             * Size Bytes
+             * @default 0
+             */
+            size_bytes: number;
+        };
+        /** StudioVersionSummaryOut */
+        StudioVersionSummaryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            /** Status */
+            status: string;
+            /** Published At */
+            published_at?: string | null;
+            /** Review Notes */
+            review_notes: string;
+        };
+        /** StudioWorkingVersionOut */
+        StudioWorkingVersionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            /** Status */
+            status: string;
+            /** Editable */
+            editable: boolean;
+            /** Checklist */
+            checklist: string[];
+            /** Sections */
+            sections: components["schemas"]["StudioEditorSectionOut"][];
         };
         /** CoursePatch */
         CoursePatch: {
@@ -5556,10 +6070,26 @@ export interface components {
             thumbnail_url?: string | null;
             /** Cpd Hours */
             cpd_hours?: number | null;
+            /** Outcomes */
+            outcomes?: string[] | null;
+            /** Requirements */
+            requirements?: string[] | null;
             /** In Subscription */
             in_subscription?: boolean | null;
             /** In Business */
             in_business?: boolean | null;
+        };
+        /** StudioPriceTierOut */
+        StudioPriceTierOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Gbp Minor */
+            gbp_minor: number;
         };
         /** PriceIn */
         PriceIn: {
@@ -5570,6 +6100,16 @@ export interface components {
              * @default false
              */
             free: boolean;
+        };
+        /** StudioDraftOut */
+        StudioDraftOut: {
+            /**
+             * Version Id
+             * Format: uuid
+             */
+            version_id: string;
+            /** Number */
+            number: number;
         };
         /** SubmitIn */
         SubmitIn: {
@@ -5583,6 +6123,16 @@ export interface components {
              * @default false
              */
             requires_recompletion: boolean;
+        };
+        /** StudioSectionCreateOut */
+        StudioSectionCreateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Position */
+            position: number;
         };
         /** SectionIn */
         SectionIn: {
@@ -5598,6 +6148,19 @@ export interface components {
         OrderIn: {
             /** Ids */
             ids: string[];
+        };
+        /** StudioLectureCreateOut */
+        StudioLectureCreateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Key
+             * Format: uuid
+             */
+            key: string;
         };
         /** LectureIn */
         LectureIn: {
@@ -5655,6 +6218,14 @@ export interface components {
             shuffle_options?: boolean | null;
             /** Reveal Answers */
             reveal_answers?: string | null;
+        };
+        /** StudioQuestionCreateOut */
+        StudioQuestionCreateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
         };
         /** OptionIn */
         OptionIn: {
@@ -5716,12 +6287,52 @@ export interface components {
             /** Submission Types */
             submission_types?: string[] | null;
         };
+        /** StudioResourceUploadOut */
+        StudioResourceUploadOut: {
+            /**
+             * Asset Id
+             * Format: uuid
+             */
+            asset_id: string;
+            /** Upload Url */
+            upload_url: string;
+            /** Method */
+            method: string;
+            /** Headers */
+            headers: {
+                [key: string]: string;
+            };
+            /** Expires In */
+            expires_in: number;
+            /** Max Bytes */
+            max_bytes: number;
+        };
         /** ResourceUploadIn */
         ResourceUploadIn: {
             /** Filename */
             filename: string;
             /** Size Bytes */
             size_bytes: number;
+        };
+        /** StudioResourceOut */
+        StudioResourceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Position */
+            position: number;
+            /** Kind */
+            kind: string;
+            /** Filename */
+            filename: string;
+            /** Size Bytes */
+            size_bytes?: number | null;
+            /** Mime Type */
+            mime_type: string;
         };
         /** ResourceIn */
         ResourceIn: {
@@ -5737,6 +6348,33 @@ export interface components {
         ResourcePatch: {
             /** Title */
             title: string;
+        };
+        /** StudioResourceDownloadOut */
+        StudioResourceDownloadOut: {
+            /** Url */
+            url: string;
+            /** Expires In */
+            expires_in: number;
+        };
+        /** StudioBunnyUploadOut */
+        StudioBunnyUploadOut: {
+            /** Endpoint */
+            endpoint: string;
+            /** Headers */
+            headers: {
+                [key: string]: string;
+            };
+            /** Expires At */
+            expires_at: number;
+        };
+        /** StudioVideoUploadOut */
+        StudioVideoUploadOut: {
+            /**
+             * Asset Id
+             * Format: uuid
+             */
+            asset_id: string;
+            upload: components["schemas"]["StudioBunnyUploadOut"];
         };
         /** VideoIn */
         VideoIn: {
@@ -5755,6 +6393,154 @@ export interface components {
              */
             size_bytes: number;
         };
+        /** StudioCaptionOut */
+        StudioCaptionOut: {
+            /** Srclang */
+            srclang: string;
+            /** Label */
+            label: string;
+        };
+        /** StudioThumbFrameOut */
+        StudioThumbFrameOut: {
+            /** Name */
+            name: string;
+            /** Url */
+            url: string;
+        };
+        /** StudioThumbnailsOut */
+        StudioThumbnailsOut: {
+            /** Current */
+            current: string;
+            /** Frames */
+            frames: components["schemas"]["StudioThumbFrameOut"][];
+        };
+        /** StudioVideoDetailsOut */
+        StudioVideoDetailsOut: {
+            /** Parts */
+            parts: components["schemas"]["VideoPartOut"][];
+            /** Moments */
+            moments: components["schemas"]["VideoMomentOut"][];
+            /** Duration Sec */
+            duration_sec: number;
+            /** Resolutions */
+            resolutions: string[];
+            /** Captions */
+            captions: components["schemas"]["StudioCaptionOut"][];
+            thumbnails: components["schemas"]["StudioThumbnailsOut"];
+        };
+        /** StudioVideoMetaOut */
+        StudioVideoMetaOut: {
+            /** Parts */
+            parts: components["schemas"]["VideoPartOut"][];
+            /** Moments */
+            moments: components["schemas"]["VideoMomentOut"][];
+        };
+        /** VideoMomentIn */
+        VideoMomentIn: {
+            /** Label */
+            label: string;
+            /** Timestamp */
+            timestamp: number;
+        };
+        /** VideoPartIn */
+        VideoPartIn: {
+            /** Title */
+            title: string;
+            /** Start */
+            start: number;
+        };
+        /** VideoPartsIn */
+        VideoPartsIn: {
+            /** Parts */
+            parts?: components["schemas"]["VideoPartIn"][];
+            /** Moments */
+            moments?: components["schemas"]["VideoMomentIn"][];
+        };
+        /** ThumbnailIn */
+        ThumbnailIn: {
+            /** Choice */
+            choice: string;
+        };
+        /** CaptionIn */
+        CaptionIn: {
+            /** Srclang */
+            srclang: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+            /** Content */
+            content: string;
+        };
+        /** StudioMediaStatusOut */
+        StudioMediaStatusOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Status */
+            status: string;
+            /** Encode Progress */
+            encode_progress: number;
+            /** Duration Sec */
+            duration_sec: number;
+            /** Preview Url */
+            preview_url?: string | null;
+        };
+        /** StudioVideoFetchOut */
+        StudioVideoFetchOut: {
+            /**
+             * Asset Id
+             * Format: uuid
+             */
+            asset_id: string;
+        };
+        /** VideoFetchIn */
+        VideoFetchIn: {
+            /** Course Id */
+            course_id: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+        };
+        /** StudioCouponOut */
+        StudioCouponOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Percent Off */
+            percent_off: number;
+            /** Max Redemptions */
+            max_redemptions?: number | null;
+            /** Redeemed Count */
+            redeemed_count: number;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Ends At */
+            ends_at?: string | null;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** StudioCouponCreateOut */
+        StudioCouponCreateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+        };
         /** CouponIn */
         CouponIn: {
             /** Code */
@@ -5766,10 +6552,197 @@ export interface components {
             /** Days */
             days: number;
         };
+        /** StudioStudentOut */
+        StudioStudentOut: {
+            /** Name */
+            name: string;
+            /** Progress Pct */
+            progress_pct: number;
+            /** Status */
+            status: string;
+            /**
+             * Enrolled At
+             * Format: date-time
+             */
+            enrolled_at: string;
+            /** Last Accessed At */
+            last_accessed_at?: string | null;
+        };
+        /** StudioQuestionInboxOut */
+        StudioQuestionInboxOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Author */
+            author: string;
+            /** Answer Count */
+            answer_count: number;
+            /** Has Instructor Answer */
+            has_instructor_answer: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** StudioReviewInboxOut */
+        StudioReviewInboxOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course Title */
+            course_title: string;
+            /** Rating */
+            rating: number;
+            /** Body */
+            body: string;
+            /** Author */
+            author: string;
+            /** Instructor Reply */
+            instructor_reply: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** StudioEssayQuestionOut */
+        StudioEssayQuestionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Prompt */
+            prompt: string;
+            /** Points */
+            points: number;
+        };
+        /** StudioGradingAttemptOut */
+        StudioGradingAttemptOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Learner */
+            learner: string;
+            /** Course */
+            course: string;
+            /** Quiz */
+            quiz: string;
+            /** Submitted At */
+            submitted_at?: string | null;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Answers */
+            answers: {
+                [key: string]: unknown;
+            };
+            /** Results */
+            results: {
+                [key: string]: unknown;
+            };
+            /** Essays */
+            essays: components["schemas"]["StudioEssayQuestionOut"][];
+        };
+        /** StudioGradingQueueOut */
+        StudioGradingQueueOut: {
+            /** Submissions */
+            submissions: components["schemas"]["StudioGradingSubmissionOut"][];
+            /** Attempts */
+            attempts: components["schemas"]["StudioGradingAttemptOut"][];
+        };
+        /** StudioGradingSubmissionOut */
+        StudioGradingSubmissionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Learner */
+            learner: string;
+            /** Course */
+            course: string;
+            /** Lecture */
+            lecture: string;
+            /** Attempt No */
+            attempt_no: number;
+            /** Text */
+            text: string;
+            /** Url */
+            url: string;
+            /**
+             * Submitted At
+             * Format: date-time
+             */
+            submitted_at: string;
+            /** Is Late */
+            is_late: boolean;
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Max Score */
+            max_score: number;
+            /** Pass Score */
+            pass_score: number;
+            /** Rubric */
+            rubric: {
+                [key: string]: unknown;
+            }[];
+            /** Files */
+            files: components["schemas"]["StudioSubmissionFileOut"][];
+        };
+        /** StudioSubmissionFileOut */
+        StudioSubmissionFileOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Filename */
+            filename: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
+        /** StudioGradeOut */
+        StudioGradeOut: {
+            /** Status */
+            status: string;
+            /** Passed */
+            passed?: boolean | null;
+        };
         /** GradeIn */
         GradeIn: {
             /** Score */
             score: number;
+            /** Rubric Scores */
+            rubric_scores?: components["schemas"]["RubricScoreIn"][];
             /**
              * Feedback
              * @default
@@ -5780,6 +6753,22 @@ export interface components {
              * @default false
              */
             return_for_resubmission: boolean;
+        };
+        /** RubricScoreIn */
+        RubricScoreIn: {
+            /** Criterion */
+            criterion: string;
+            /** Points */
+            points: number;
+        };
+        /** StudioEssayGradeOut */
+        StudioEssayGradeOut: {
+            /** Status */
+            status: string;
+            /** Passed */
+            passed?: boolean | null;
+            /** Score Pct */
+            score_pct: number;
         };
         /** EssayGradeIn */
         EssayGradeIn: {
@@ -5792,6 +6781,109 @@ export interface components {
              * @default
              */
             feedback: string;
+        };
+        /** StudioDashboardOut */
+        StudioDashboardOut: {
+            /** Courses */
+            courses: number;
+            /** Published */
+            published: number;
+            /** Students */
+            students: number;
+            /** Rating Avg */
+            rating_avg: number;
+            /** Rating Count */
+            rating_count: number;
+            /** Earned This Month Gbp Minor */
+            earned_this_month_gbp_minor: number;
+            /** To Mark */
+            to_mark: number;
+            /** Unanswered */
+            unanswered: number;
+        };
+        /** StudioRevenueBalanceOut */
+        StudioRevenueBalanceOut: {
+            /** Available */
+            available: number;
+            /** Pending */
+            pending: number;
+            /** Paid */
+            paid: number;
+        };
+        /** StudioRevenueCourseOut */
+        StudioRevenueCourseOut: {
+            /**
+             * Course Id
+             * Format: uuid
+             */
+            course_id: string;
+            /** Course  Title */
+            course__title: string;
+            /** Amount */
+            amount: number;
+        };
+        /** StudioRevenueMonthOut */
+        StudioRevenueMonthOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Channel */
+            channel: string;
+            /** Amount */
+            amount: number;
+        };
+        /** StudioRevenueOut */
+        StudioRevenueOut: {
+            balance: components["schemas"]["StudioRevenueBalanceOut"];
+            /** By Month */
+            by_month: components["schemas"]["StudioRevenueMonthOut"][];
+            /** By Course */
+            by_course: components["schemas"]["StudioRevenueCourseOut"][];
+        };
+        /** StudioPayoutOut */
+        StudioPayoutOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Period End
+             * Format: date
+             */
+            period_end: string;
+            /** Amount Gbp Minor */
+            amount_gbp_minor: number;
+            /** Status */
+            status: string;
+            /** Method */
+            method: string;
+            /** Paid At */
+            paid_at?: string | null;
+            /** Failure Reason */
+            failure_reason: string;
+        };
+        /** StudioPayoutAccountOut */
+        StudioPayoutAccountOut: {
+            /** Configured */
+            configured: boolean;
+            /** Method */
+            method?: string | null;
+            /** Paypal Email */
+            paypal_email?: string | null;
+            /** Country */
+            country?: string | null;
+            /** Verified */
+            verified?: boolean | null;
+            /** Stripe Connected */
+            stripe_connected?: boolean | null;
+        };
+        /** StudioPayoutAccountSetOut */
+        StudioPayoutAccountSetOut: {
+            /** Verified */
+            verified: boolean;
         };
         /** PayoutAccountIn */
         PayoutAccountIn: {
@@ -7070,6 +8162,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OkOut"];
+                };
+            };
+        };
+    };
+    apps_learning_api_update_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotePatchIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteOut"];
                 };
             };
         };
@@ -8530,7 +9648,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioStatusOut"];
+                };
             };
         };
     };
@@ -8548,7 +9668,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioCourseRow"][];
+                };
             };
         };
     };
@@ -8570,7 +9692,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioCourseCreateOut"];
+                };
             };
         };
     };
@@ -8590,7 +9714,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioCourseDetailOut"];
+                };
             };
         };
     };
@@ -8614,7 +9740,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8632,7 +9760,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioPriceTierOut"][];
+                };
             };
         };
     };
@@ -8656,7 +9786,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8676,7 +9808,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioDraftOut"];
+                };
             };
         };
     };
@@ -8700,7 +9834,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioStatusOut"];
+                };
             };
         };
     };
@@ -8724,7 +9860,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioSectionCreateOut"];
+                };
             };
         };
     };
@@ -8748,7 +9886,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8768,7 +9908,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8792,7 +9934,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8816,7 +9960,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioLectureCreateOut"];
+                };
             };
         };
     };
@@ -8840,7 +9986,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8860,7 +10008,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8884,7 +10034,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8908,7 +10060,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8932,7 +10086,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioQuestionCreateOut"];
+                };
             };
         };
     };
@@ -8956,7 +10112,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -8976,7 +10134,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -9000,7 +10160,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -9024,7 +10186,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioResourceUploadOut"];
+                };
             };
         };
     };
@@ -9048,7 +10212,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioResourceOut"];
+                };
             };
         };
     };
@@ -9068,7 +10234,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -9092,7 +10260,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioResourceOut"];
+                };
             };
         };
     };
@@ -9112,7 +10282,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioResourceDownloadOut"];
+                };
             };
         };
     };
@@ -9134,7 +10306,132 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioVideoUploadOut"];
+                };
+            };
+        };
+    };
+    apps_catalog_studio_video_details: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudioVideoDetailsOut"];
+                };
+            };
+        };
+    };
+    apps_catalog_studio_save_video_parts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoPartsIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudioVideoMetaOut"];
+                };
+            };
+        };
+    };
+    apps_catalog_studio_set_video_thumbnail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThumbnailIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+        };
+    };
+    apps_catalog_studio_add_video_caption: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaptionIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+        };
+    };
+    apps_catalog_studio_delete_video_caption: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+                srclang: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -9154,7 +10451,33 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioMediaStatusOut"];
+                };
+            };
+        };
+    };
+    apps_catalog_studio_fetch_video_from_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoFetchIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudioVideoFetchOut"];
+                };
             };
         };
     };
@@ -9174,7 +10497,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioCouponOut"][];
+                };
             };
         };
     };
@@ -9198,7 +10523,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioCouponCreateOut"];
+                };
             };
         };
     };
@@ -9218,7 +10545,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
             };
         };
     };
@@ -9240,7 +10569,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioStudentOut"][];
+                };
             };
         };
     };
@@ -9261,7 +10592,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioQuestionInboxOut"][];
+                };
             };
         };
     };
@@ -9282,7 +10615,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioReviewInboxOut"][];
+                };
             };
         };
     };
@@ -9300,7 +10635,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioGradingQueueOut"];
+                };
             };
         };
     };
@@ -9324,7 +10661,31 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioGradeOut"];
+                };
+            };
+        };
+    };
+    apps_catalog_studio_submission_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudioResourceDownloadOut"];
+                };
             };
         };
     };
@@ -9348,7 +10709,29 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioEssayGradeOut"];
+                };
+            };
+        };
+    };
+    apps_catalog_studio_dashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudioDashboardOut"];
+                };
             };
         };
     };
@@ -9366,7 +10749,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioRevenueOut"];
+                };
             };
         };
     };
@@ -9384,7 +10769,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioPayoutOut"][];
+                };
             };
         };
     };
@@ -9402,7 +10789,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioPayoutAccountOut"];
+                };
             };
         };
     };
@@ -9424,7 +10813,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["StudioPayoutAccountSetOut"];
+                };
             };
         };
     };

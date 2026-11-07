@@ -35,6 +35,8 @@ page and faded out so content stays readable. Purely decorative (`aria-hidden`).
 | Business: reports | chart grid (faint bars, lines, donuts) |
 | Business: requirements / library, assign / billing / settings | checklist / mosaic / ribbons / dials |
 | Instructor studio, design page | blueprint grid |
+| Studio: course curriculum builder | storyboard (film strip with sketched frames) |
+| Studio: sales & earnings, payouts | coins (coin stacks beside rising bars) |
 | Admin console | circuit traces |
 | Sign-in pages | aurora |
 | Empty / not found | orbit |

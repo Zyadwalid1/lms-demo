@@ -18,6 +18,7 @@ from apps.catalog import media, resources
 from apps.catalog.models import CourseInstructor, Lecture, QuizQuestion
 from apps.catalog.selectors import curriculum, learner_quiz
 from core import cursor as keyset
+from core import html
 from core.auth import session_auth
 from core.errors import ServiceError
 
@@ -32,6 +33,7 @@ from .schemas import (
     MyCoursePage,
     NoteIn,
     NoteOut,
+    NotePatchIn,
     OkOut,
     PlayerOut,
     ProgressOut,
@@ -167,6 +169,7 @@ def lecture(request, enrollment_id: str, lecture_key: str):
     }  # fmt: skip
     if lec.kind == Lecture.Kind.VIDEO:
         out["video"] = media.playback(lec.video)
+        out.update(media.video_meta(lec.video))
     elif lec.kind == Lecture.Kind.ARTICLE:
         out["body"] = lec.body
     elif lec.kind in (Lecture.Kind.EXTERNAL_LINK,):
@@ -354,7 +357,7 @@ def submit_assignment(request, enrollment_id: str, lecture_key: str, body: Submi
     url = body.url.strip()
     if url and not url.startswith("https://"):
         raise ServiceError("bad_url", "Links must start with https://")
-    s = services.submit_assignment(enrollment=e, assignment=assignment, text_body=body.text, url=url,
+    s = services.submit_assignment(enrollment=e, assignment=assignment, text_body=html.plain(body.text, 50000), url=url,
                                    asset_ids=body.asset_ids)  # fmt: skip
     return _submission_out(s)
 
@@ -373,6 +376,26 @@ def add_note(request, enrollment_id: str, body: NoteIn):
     _lecture(e, body.lecture_key)
     return Note.objects.create(enrollment=e, user=request.user, org_id=e.org_id, lecture_key=body.lecture_key,
                                timestamp_sec=body.timestamp_sec, body=body.body.strip())  # fmt: skip
+
+
+@router.patch("/notes/{note_id}", response=NoteOut)
+def update_note(request, note_id: str, body: NotePatchIn):
+    """Change a note's text or the moment of the video it is pinned to."""
+    note = Note.objects.filter(pk=note_id, enrollment__user=request.user).first()
+    if note is None:
+        raise ServiceError("not_found", "Note not found.", status=404)
+    fields = ["updated_at"]
+    if body.clear_timestamp:
+        note.timestamp_sec = None
+        fields.append("timestamp_sec")
+    elif body.timestamp_sec is not None:
+        note.timestamp_sec = body.timestamp_sec
+        fields.append("timestamp_sec")
+    if body.body is not None:
+        note.body = body.body.strip()
+        fields.append("body")
+    note.save(update_fields=fields)
+    return note
 
 
 @router.delete("/notes/{note_id}", response=OkOut)

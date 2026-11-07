@@ -65,7 +65,13 @@ export function UserMenu({ onDark }: { onDark?: boolean }) {
               <PenTool /> Instructor studio
             </Link>
           </MenuItem>
-        ) : null}
+        ) : (
+          <MenuItem asChild>
+            <Link to="/teach">
+              <PenTool /> {me.instructor_status === 'pending' ? 'Application pending' : 'Teach on LearnHub'}
+            </Link>
+          </MenuItem>
+        )}
         {me.is_staff ? (
           <MenuItem asChild>
             <Link to="/console">

@@ -7,7 +7,7 @@ from uuid import UUID
 
 from ninja import Field, Schema
 
-from apps.catalog.schemas import PlaybackOut
+from apps.catalog.schemas import PlaybackOut, VideoMomentOut, VideoPartOut
 from apps.identity.schemas import OkOut  # noqa: F401 - shared response shape
 
 
@@ -143,6 +143,8 @@ class LectureContent(Schema):
     body: str = ""  # readings
     external_url: str = ""
     video: PlaybackOut | None = None  # signed playback
+    parts: list[VideoPartOut] = []  # the video's named parts and key moments (from Bunny)
+    moments: list[VideoMomentOut] = []
     live: LiveOut | None = None
     resources: list[ResourceOut] = []
     quiz: LectureQuizOut | None = None
@@ -229,6 +231,12 @@ class SubmissionUploadOut(Schema):
     headers: dict[str, str]
     expires_in: int
     max_bytes: int
+
+
+class NotePatchIn(Schema):
+    timestamp_sec: int | None = Field(None, ge=0, le=86400)
+    clear_timestamp: bool = False  # unpin the note from the video
+    body: str | None = Field(None, min_length=1, max_length=10000)
 
 
 class NoteIn(Schema):

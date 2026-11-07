@@ -24,6 +24,10 @@ def csrf(request):
     return {"ok": True}
 
 
+def _instructor_status(user) -> str:
+    return user.instructor_profile.status if hasattr(user, "instructor_profile") else "none"
+
+
 def _me(user) -> dict:
     from apps.org.models import OrgBranding, OrgMember
 
@@ -38,7 +42,9 @@ def _me(user) -> dict:
     return {
         "id": user.id, "email": user.email, "full_name": user.full_name, "avatar_url": user.avatar_url,
         "timezone": user.timezone, "is_staff": user.is_staff, "preferred_currency": user.preferred_currency,
-        "is_instructor": hasattr(user, "instructor_profile"),
+        # only approved instructors may use the studio; the rest see "apply" or "pending"
+        "is_instructor": _instructor_status(user) == "approved",
+        "instructor_status": _instructor_status(user),
         "memberships": [
             {"org_id": m.org_id, "name": m.org.name, "slug": m.org.slug, "role": m.role,
              "logo_url": branding[m.org_id].logo_url if m.org_id in branding else "",

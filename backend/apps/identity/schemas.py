@@ -23,6 +23,7 @@ class MeOut(Schema):
     is_staff: bool
     preferred_currency: str
     is_instructor: bool
+    instructor_status: str  # none | pending | approved | suspended | rejected
     memberships: list[MembershipOut]
 
 

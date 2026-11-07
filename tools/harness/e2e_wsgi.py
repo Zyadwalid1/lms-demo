@@ -33,6 +33,8 @@ gateway.create_checkout_session = create_checkout_session
 gateway.refund = lambda *, payment_intent, amount, idempotency_key: f"re_e2e_{idempotency_key[:12]}"
 gateway.billing_portal = lambda *, customer, return_url: return_url
 gateway.cancel_at_period_end = lambda subscription_id: None
+# the fake sessions are completed by e2e_stripe.py's webhook, so polling never finds them paid
+gateway.retrieve_checkout_session = lambda session_id: {"id": session_id, "payment_status": "unpaid", "metadata": {}}
 
 _INVITE_LOG = Path(__file__).resolve().parent / "invite.log"
 _orig_invite_delay = org_tasks.send_invite_task.delay

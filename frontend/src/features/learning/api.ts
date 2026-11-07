@@ -167,6 +167,15 @@ export function useDeleteNote(enrollmentId?: string) {
   })
 }
 
+export function useUpdateNote(enrollmentId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { id: string; timestamp_sec?: number; clear_timestamp?: boolean; body?: string }) =>
+      unwrap(api.PATCH('/api/v1/learning/notes/{note_id}', { params: { path: { note_id: v.id } }, body: { timestamp_sec: v.timestamp_sec, clear_timestamp: v.clear_timestamp ?? false, body: v.body } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes', enrollmentId] }),
+  })
+}
+
 // ---------------------------------------------------------------- certificates
 export function useMyCertificates() {
   return useQuery({ queryKey: ['certificates'], queryFn: () => unwrap(api.GET('/api/v1/learning/my/certificates')) })

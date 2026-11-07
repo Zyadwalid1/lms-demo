@@ -38,6 +38,13 @@ export function SignupPage() {
           </p>
           <p className="mt-3 text-xs text-muted">Nothing there? Check your junk folder.</p>
         </div>
+        {/* sign-up answers the same way for known emails (no account probing), so say what happens then */}
+        <p className="mt-4 text-center text-sm text-muted">
+          Already have an account with this email? We've emailed you a reminder instead.{' '}
+          <Link to="/login" className="font-medium text-primary hover:underline">
+            Log in
+          </Link>
+        </p>
       </AuthShell>
     )
   }

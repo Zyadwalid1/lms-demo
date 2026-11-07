@@ -25,12 +25,14 @@
  *   chartgrid      business reports: a wall of faint small charts
  *   orgchart       business people: an org chart drawn like a constellation
  *   floorplan      business units: a floor plan with map pins
+ *   storyboard     course builder curriculum: film-strip frames with sketched scenes
+ *   coins          studio money pages: coin stacks beside rising bars
  */
 import { memo, useId, type ReactNode } from 'react'
 
 import { cn } from '@/lib/cn'
 
-export type BackdropVariant = 'constellation' | 'mosaic' | 'waves' | 'path' | 'contours' | 'blueprint' | 'circuit' | 'aurora' | 'orbit' | 'ribbons' | 'confetti' | 'notebook' | 'guilloche' | 'honeycomb' | 'checklist' | 'signal' | 'dials' | 'bubbles' | 'chartgrid' | 'orgchart' | 'floorplan'
+export type BackdropVariant = 'constellation' | 'mosaic' | 'waves' | 'path' | 'contours' | 'blueprint' | 'circuit' | 'aurora' | 'orbit' | 'ribbons' | 'confetti' | 'notebook' | 'guilloche' | 'honeycomb' | 'checklist' | 'signal' | 'dials' | 'bubbles' | 'chartgrid' | 'orgchart' | 'floorplan' | 'storyboard' | 'coins'
 
 // small seeded PRNG (mulberry32): same seed, same art
 function rng(seed: number) {
@@ -725,6 +727,130 @@ const ChartGrid = memo(function ChartGrid() {
   )
 })
 
+/** storyboard (curriculum builder): a tilted film strip of frames with sketched scenes,
+ * plus a few loose storyboard cards, all on the right. */
+const Storyboard = memo(function Storyboard() {
+  const id = useId()
+  const r = rng(53)
+  const colors = ['var(--primary)', 'var(--chart-5)', 'var(--chart-2)', 'var(--chart-3)']
+  const fw = 150
+  const fh = 104
+  const x0 = 820
+  const y0 = 150
+  const frames = 5
+  const scene = (x: number, y: number, kind: number, c: string) => {
+    // a play triangle (video)
+    if (kind === 0) return <path d={`M${x + fw / 2 - 14} ${y + fh / 2 - 18} L${x + fw / 2 + 18} ${y + fh / 2} L${x + fw / 2 - 14} ${y + fh / 2 + 18} Z`} fill={c} fillOpacity="0.32" />
+    // hills and a sun (a scene)
+    if (kind === 1)
+      return (
+        <g>
+          <circle cx={x + fw - 36} cy={y + 30} r="11" fill={c} fillOpacity="0.3" />
+          <path d={`M${x + 10} ${y + fh - 14} L${x + 52} ${y + 46} L${x + 82} ${y + 72} L${x + 106} ${y + 52} L${x + fw - 10} ${y + fh - 14} Z`} fill={c} fillOpacity="0.18" stroke={c} strokeOpacity="0.4" strokeWidth="1.5" strokeLinejoin="round" />
+        </g>
+      )
+    // lines of text (a reading)
+    if (kind === 2)
+      return (
+        <g fill={c} fillOpacity="0.22">
+          {[0, 1, 2, 3].map((i) => (
+            <rect key={i} x={x + 18} y={y + 22 + i * 17} width={(fw - 36) * (i === 3 ? 0.55 : 0.85 + r() * 0.15)} height="7" rx="3.5" />
+          ))}
+        </g>
+      )
+    // a tick in a circle (a quiz)
+    return (
+      <g fill="none" stroke={c} strokeOpacity="0.45" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx={x + fw / 2} cy={y + fh / 2} r="24" strokeOpacity="0.3" />
+        <path d={`M${x + fw / 2 - 11} ${y + fh / 2} l8 8 l15 -16`} />
+      </g>
+    )
+  }
+  const stripW = frames * (fw + 22) + 22
+  return (
+    <Svg>
+      <Glow id={`${id}g`} cx={1220} cy={170} r={540} color="var(--primary)" opacity={0.16} />
+      <Glow id={`${id}g2`} cx={260} cy={30} r={360} color="var(--chart-5)" opacity={0.08} />
+      {/* loose storyboard cards behind the strip */}
+      <g transform="rotate(6 1380 80)">
+        <rect x="1250" y="20" width="200" height="130" rx="12" fill="var(--surface)" fillOpacity="0.4" stroke="var(--primary)" strokeOpacity="0.18" strokeWidth="1.5" strokeDasharray="5 6" />
+        <rect x="1270" y="164" width="120" height="7" rx="3.5" fill="var(--text-subtle)" fillOpacity="0.16" />
+      </g>
+      <g transform="rotate(-8 980 470)">
+        <rect x="900" y="420" width="180" height="118" rx="12" fill="var(--surface)" fillOpacity="0.4" stroke="var(--chart-5)" strokeOpacity="0.2" strokeWidth="1.5" strokeDasharray="5 6" />
+      </g>
+      {/* the film strip: sprocket holes above and below a row of frames */}
+      <g transform={`rotate(-7 ${x0 + stripW / 2} ${y0 + fh / 2})`}>
+        <rect x={x0} y={y0 - 34} width={stripW} height={fh + 68} rx="10" fill="var(--primary)" fillOpacity="0.1" stroke="var(--primary)" strokeOpacity="0.24" strokeWidth="1.5" />
+        <g fill="var(--surface)" fillOpacity="0.75">
+          {Array.from({ length: Math.floor(stripW / 30) }, (_, i) => (
+            <g key={i}>
+              <rect x={x0 + 12 + i * 30} y={y0 - 24} width="14" height="10" rx="2.5" />
+              <rect x={x0 + 12 + i * 30} y={y0 + fh + 14} width="14" height="10" rx="2.5" />
+            </g>
+          ))}
+        </g>
+        {Array.from({ length: frames }, (_, i) => {
+          const x = x0 + 22 + i * (fw + 22)
+          const c = colors[i % colors.length]!
+          return (
+            <g key={i} opacity={0.6 + 0.4 * (i / (frames - 1))}>
+              <rect x={x} y={y0} width={fw} height={fh} rx="8" fill="var(--surface)" fillOpacity="0.55" stroke={c} strokeOpacity="0.3" strokeWidth="1.5" />
+              {scene(x, y0, i % 4, c)}
+            </g>
+          )
+        })}
+      </g>
+      {/* reorder arrows between the strip and the cards */}
+      <g fill="none" stroke="var(--primary)" strokeOpacity="0.25" strokeWidth="1.5" strokeDasharray="2 7" strokeLinecap="round">
+        <path d="M1180 120 C 1230 60, 1290 60, 1320 120" />
+        <path d="M1050 400 C 1010 440, 1000 470, 1010 500" />
+      </g>
+    </Svg>
+  )
+})
+
+/** coins (money pages): stacks of coins beside bars that rise to a trend line. */
+const Coins = memo(function Coins() {
+  const id = useId()
+  const r = rng(67)
+  const coin = (cx: number, cy: number, c: string, o: number, key: string) => (
+    <g key={key}>
+      <rect x={cx - 34} y={cy} width="68" height="12" fill={c} fillOpacity={o * 0.8} />
+      <ellipse cx={cx} cy={cy + 12} rx="34" ry="10" fill={c} fillOpacity={o * 0.8} />
+      <ellipse cx={cx} cy={cy} rx="34" ry="10" fill={c} fillOpacity={o} stroke={c} strokeOpacity="0.45" strokeWidth="1.2" />
+      <ellipse cx={cx} cy={cy} rx="22" ry="6" fill="none" stroke="var(--surface)" strokeOpacity="0.5" strokeWidth="1.2" />
+    </g>
+  )
+  const stack = (cx: number, base: number, n: number, c: string, key: string) =>
+    Array.from({ length: n }, (_, i) => coin(cx + (r() - 0.5) * 6, base - i * 14, c, 0.22 + (i === n - 1 ? 0.12 : 0), `${key}${i}`))
+  const bars = Array.from({ length: 7 }, (_, i) => ({ x: 860 + i * 58, h: 60 + i * 34 + r() * 30 }))
+  const baseY = 560
+  const trend = bars.map((b, i) => `${i ? 'L' : 'M'}${b.x + 18} ${(baseY - b.h - 18).toFixed(1)}`).join(' ')
+  const last = bars[bars.length - 1]!
+  return (
+    <Svg>
+      <Glow id={`${id}g`} cx={1230} cy={180} r={540} color="var(--chart-2)" opacity={0.14} />
+      <Glow id={`${id}g2`} cx={1000} cy={60} r={380} color="var(--primary)" opacity={0.12} />
+      <g stroke="var(--primary)" strokeOpacity="0.06">
+        {Array.from({ length: 8 }, (_, i) => (
+          <line key={i} x1="820" x2={W} y1={baseY - i * 64} y2={baseY - i * 64} />
+        ))}
+      </g>
+      {bars.map((b, i) => (
+        <rect key={i} x={b.x} y={baseY - b.h} width="36" height={b.h} rx="6" fill="var(--primary)" fillOpacity={0.08 + i * 0.025} stroke="var(--primary)" strokeOpacity="0.16" />
+      ))}
+      <path d={trend} fill="none" stroke="var(--chart-2)" strokeOpacity="0.5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={`M${last.x + 6} ${(baseY - last.h - 30).toFixed(1)} l12 -12 l12 12`} fill="none" stroke="var(--chart-2)" strokeOpacity="0.55" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {stack(1330, 520, 6, 'var(--chart-3)', 'a')}
+      {stack(1420, 520, 9, 'var(--chart-2)', 'b')}
+      {stack(1510, 520, 4, 'var(--chart-3)', 'c')}
+      {coin(1480, 150, 'var(--chart-3)', 0.2, 'f1')}
+      {coin(1290, 90, 'var(--chart-2)', 0.14, 'f2')}
+    </Svg>
+  )
+})
+
 /**
  * The artwork for one page, placed behind its top area and faded into the page
  * background so content always reads clearly. Purely decorative (aria-hidden).
@@ -752,6 +878,8 @@ export function Backdrop({ variant, height = 560, className, from, to, fade = tr
     chartgrid: <ChartGrid />,
     orgchart: <OrgChart />,
     floorplan: <FloorPlan />,
+    storyboard: <Storyboard />,
+    coins: <Coins />,
   }[variant]
   return (
     <div
