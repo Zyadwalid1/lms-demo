@@ -17,14 +17,15 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
 ## M5 progress (2026-11-07, in progress)
-**Committed:** P1 contract/routes/nav/search/migrations (a9f6c65), P3 dashboard (f22bb9e), P17 reports (22cde26).
+**Committed:** P1 contract/routes/nav/search/migrations (a9f6c65), P2 `seed_console_demo`, P3 dashboard (f22bb9e), P17 reports (22cde26).
+P2: `python manage.py seed_console_demo` (after `seed_demo`, on dev and e2e once the M5 migrations ran). Adds only; every row has a fixed marker, so a second run adds nothing (tested). Seeded learners have no password. It does not create instructor earnings for its orders.
 **Uncommitted in the working tree:** four parallel helpers were building P4/P5/P13 (approvals, courses,
 certificates), P7–P10 (sales, subscriptions, pricing, promotions), P6/P11/P12 (people, commissions, payouts +
 `/studio/payouts`) and P14–P16/P18/P19 (communications, moderation, companies, settings, audit). All four stopped
 at the account usage limit (resets 9 Nov). Their code is partly done and **not yet tested or reviewed**; resume
 each area, run its tests (`core/tests/test_console_<area>.py`, own `TEST_DB_NAME`), then commit per package.
 Helper-added migration so far: learning **0005_console_a_verify** (check it is additive before listing it).
-**Still to do:** P2 `seed_console_demo`, P20 docs, `tools/harness/e2e_m5.js` (write, run later).
+**Still to do:** P20 docs, `tools/harness/e2e_m5.js` (write, run later).
 
 ### Verification pass M4 + M5 (deferred by the user, run later)
 Full backend suite, `e2e_m4.js`, `e2e_m5.js` (acceptance 1–17), M1–M3 E2E reruns, phone check on every console
