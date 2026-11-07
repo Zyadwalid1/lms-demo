@@ -148,12 +148,12 @@ Part of the M5 brief. Each line is a control shown in an approved mockup. Build 
 - [x] Filters: date range, report type, category, instructor; Generate report; Export CSV / Export report (new)
 
 ## 18 Settings (P18)
-- [ ] Tabs: general, payment, learning, notification, instructor, security (settings exist as key/value; typed editors new)
-- [ ] Platform name, tagline, logo + favicon upload, language, currency, time zone, date format (new; used site-wide)
-- [ ] Platform preview (new)
-- [ ] Registration enabled, instructor applications, guest browsing, maintenance mode (new: enforced, staff bypass)
-- [ ] Security: password length, session length, email verification, 2-step sign-in (allauth MFA) (new)
-- [ ] Save / discard changes (new)
+- [x] Tabs: general, payment, learning, notification, instructor, security (settings exist as key/value; typed editors new)
+- [x] Platform name, tagline, logo + favicon upload, language, currency, time zone, date format (new; used site-wide)
+- [x] Platform preview (new)
+- [x] Registration enabled, instructor applications, guest browsing, maintenance mode (new: enforced, staff bypass)
+- [x] Security: password length, session length, email verification, 2-step sign-in (allauth MFA) (new)
+- [x] Save / discard changes (new)
 
 ## Console-wide
 - [x] Global search (users, instructors, courses, orders, tickets, certificates) (new)

@@ -13,8 +13,11 @@ import { Switch } from '@/components/ui/switch'
 import { useCurrencies } from '@/features/commerce/api'
 import { usePreferences, useSetPreference } from '@/features/engagement/api'
 import { AuthError, useChangePassword, useHasPassword, useMe, useUpdateMe } from '@/features/identity/auth'
+import { usePublicSettings } from '@/features/platform/api'
 import { useCurrency } from '@/lib/currency'
 import { Link } from '@/lib/router'
+
+import { TwoStepCard } from './TwoStepCard'
 
 /** Phones have no sidebar: the account page doubles as the way to everything else. */
 const shortcuts = [
@@ -120,6 +123,7 @@ function Profile() {
 
 function Password() {
   const has = useHasPassword()
+  const minLength = usePublicSettings().settings['security.password_min_length']
   const change = useChangePassword()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -141,7 +145,7 @@ function Password() {
   }
   return (
     <Card id="password">
-      <CardHeader title={has.data === false ? 'Set a password' : 'Password'} description={has.data === false ? 'You sign in with Google or Microsoft. Add a password to sign in with your email too.' : 'Use at least 8 characters. A passphrase is easier to remember.'} />
+      <CardHeader title={has.data === false ? 'Set a password' : 'Password'} description={has.data === false ? 'You sign in with Google or Microsoft. Add a password to sign in with your email too.' : `Use at least ${minLength} characters. A passphrase is easier to remember.`} />
       <CardBody>
         <form onSubmit={save} className="grid gap-4 sm:grid-cols-2">
           {has.data !== false ? (
@@ -150,7 +154,7 @@ function Password() {
             </Field>
           ) : null}
           <Field label="New password" error={errors.new_password}>
-            {(f) => <Input {...f} type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={8} required />}
+            {(f) => <Input {...f} type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" minLength={minLength} required />}
           </Field>
           <div className="flex justify-end sm:col-span-2">
             <Button type="submit" variant="secondary" loading={change.isPending} disabled={!next || (has.data !== false && !current)}>
@@ -235,6 +239,7 @@ export function AccountPage() {
       <div className="stagger grid max-w-3xl scroll-mt-24 gap-6 [&>*]:scroll-mt-24">
         <Profile />
         <Password />
+        <TwoStepCard />
         <NotificationSettings />
         <Card id="companies">
           <CardHeader title="Companies" description="Workspaces you belong to. Training they assign appears in My learning." />

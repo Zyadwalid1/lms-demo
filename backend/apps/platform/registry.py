@@ -27,6 +27,7 @@ class Def:
     choices: tuple = field(default_factory=tuple)
 
 
+BRANDING_PATH = "/api/v1/platform/branding/"  # uploaded logo / favicon, served by the platform API
 DATE_FORMATS = ("d MMM yyyy", "dd/MM/yyyy", "yyyy-MM-dd")
 LANGUAGES = ("en", "ar", "fr", "de", "es")
 
@@ -115,6 +116,7 @@ def validate(key: str, value):
         raise ServiceError("bad_value", f"{d.label}: choose one of the options.")
     if len(value) > d.max_len:
         raise ServiceError("bad_value", f"{d.label}: at most {d.max_len} characters.")
-    if d.key.endswith("_url") and value and not value.startswith("https://"):
+    uploaded = value.startswith(BRANDING_PATH) and "//" not in value  # our own upload (console)
+    if d.key.endswith("_url") and value and not uploaded and not value.startswith("https://"):
         raise ServiceError("bad_value", f"{d.label}: use an https link.")
     return value

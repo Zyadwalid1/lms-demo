@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Field, Input } from '@/components/ui/input'
 import { AuthError, useSignup } from '@/features/identity/auth'
+import { usePublicSettings } from '@/features/platform/api'
 import { safeNext } from '@/lib/next'
 
 import { AuthShell } from './AuthShell'
@@ -20,6 +21,8 @@ export function SignupPage() {
   const [password, setPassword] = useState('')
   const [sent, setSent] = useState(false)
   const err = signup.error instanceof AuthError ? signup.error : null
+  const { settings } = usePublicSettings()
+  const minLength = settings['security.password_min_length']
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -49,6 +52,17 @@ export function SignupPage() {
     )
   }
 
+  if (!settings['access.registration_enabled']) {
+    // console > Settings: registration is off (the API refuses sign-ups too)
+    return (
+      <AuthShell title="Sign-ups are closed" subtitle="New accounts can't be created right now. If you already have one, you can still log in.">
+        <Button asChild size="lg" className="w-full">
+          <Link to={`/login${params.get('next') ? `?next=${encodeURIComponent(next)}` : ''}`}>Log in</Link>
+        </Button>
+      </AuthShell>
+    )
+  }
+
   return (
     <AuthShell
       title="Create your account"
@@ -71,8 +85,8 @@ export function SignupPage() {
         <Field label="Email" error={err?.fields.email}>
           {(p) => <Input {...p} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />}
         </Field>
-        <Field label="Password" hint="At least 8 characters, not a common password." error={err?.fields.password}>
-          {(p) => <Input {...p} type="password" autoComplete="new-password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />}
+        <Field label="Password" hint={`At least ${minLength} characters, not a common password.`} error={err?.fields.password}>
+          {(p) => <Input {...p} type="password" autoComplete="new-password" required minLength={minLength} value={password} onChange={(e) => setPassword(e.target.value)} />}
         </Field>
         <Button type="submit" size="lg" loading={signup.isPending} className="w-full">
           Create account
