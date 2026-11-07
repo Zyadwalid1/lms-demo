@@ -41,6 +41,9 @@ def notify(user_ids, code: str, context: dict, *, url: str = "", dedupe: str = "
         tpl = NotificationTemplate.objects.filter(code=code, is_active=True).first()
         if tpl is None:
             return []
+        from apps.platform.services import get_setting
+
+        context = {"platform": get_setting("general.platform_name"), **context}
         title, body = render(tpl.title, context)[:200], render(tpl.body, context)[:5000]
         with connection.cursor() as cur:
             cur.execute(
@@ -111,3 +114,12 @@ def mark_read(*, user, ids=None) -> int:
     if ids is not None:
         qs = qs.filter(id__in=ids)
     return qs.update(read_at=timezone.now(), updated_at=timezone.now())
+
+
+def notify_staff(code: str, context: dict, *, url: str = "", dedupe: str = "") -> list:
+    """Tell every active platform staff member (their own preferences still apply)."""
+    from apps.identity.models import User
+
+    with tenant_context(staff=True):
+        staff = list(User.objects.filter(is_staff=True, is_active=True).values_list("id", flat=True))
+    return notify(staff, code, context, url=url, dedupe=dedupe)

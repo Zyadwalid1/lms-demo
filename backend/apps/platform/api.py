@@ -1,6 +1,7 @@
 """HTTP endpoints for platform. Thin: validate -> call services/selectors -> return."""
 
 import json
+from typing import Any
 
 from django.conf import settings
 from ninja import Router
@@ -13,7 +14,7 @@ from . import services
 router = Router(tags=["platform"])
 
 
-@router.get("/settings", auth=None)
+@router.get("/settings", auth=None, response=dict[str, Any])
 def public_settings(request):
     """Settings marked public (feature flags the React app needs)."""
     return services.public_settings()

@@ -27,12 +27,13 @@
  *   floorplan      business units: a floor plan with map pins
  *   storyboard     course builder curriculum: film-strip frames with sketched scenes
  *   coins          studio money pages: coin stacks beside rising bars
+ *   stamp          console approvals: an approval seal over a stack of reviewed pages
  */
 import { memo, useId, type ReactNode } from 'react'
 
 import { cn } from '@/lib/cn'
 
-export type BackdropVariant = 'constellation' | 'mosaic' | 'waves' | 'path' | 'contours' | 'blueprint' | 'circuit' | 'aurora' | 'orbit' | 'ribbons' | 'confetti' | 'notebook' | 'guilloche' | 'honeycomb' | 'checklist' | 'signal' | 'dials' | 'bubbles' | 'chartgrid' | 'orgchart' | 'floorplan' | 'storyboard' | 'coins'
+export type BackdropVariant = 'constellation' | 'mosaic' | 'waves' | 'path' | 'contours' | 'blueprint' | 'circuit' | 'aurora' | 'orbit' | 'ribbons' | 'confetti' | 'notebook' | 'guilloche' | 'honeycomb' | 'checklist' | 'signal' | 'dials' | 'bubbles' | 'chartgrid' | 'orgchart' | 'floorplan' | 'storyboard' | 'coins' | 'stamp'
 
 // small seeded PRNG (mulberry32): same seed, same art
 function rng(seed: number) {
@@ -851,6 +852,57 @@ const Coins = memo(function Coins() {
   )
 })
 
+const Stamp = memo(function Stamp() {
+  const id = useId()
+  // a round approval seal (scalloped edge, inner rings, a tick) pressed over reviewed pages
+  const cx = 1290
+  const cy = 250
+  const scallop = Array.from({ length: 36 }, (_, i) => {
+    const a = (i / 36) * Math.PI * 2
+    const rr = i % 2 ? 150 : 162
+    return `${i ? 'L' : 'M'}${(cx + rr * Math.cos(a)).toFixed(1)} ${(cy + rr * Math.sin(a)).toFixed(1)}`
+  }).join(' ')
+  const ticks = Array.from({ length: 48 }, (_, i) => {
+    const a = (i / 48) * Math.PI * 2
+    return { x1: cx + 112 * Math.cos(a), y1: cy + 112 * Math.sin(a), x2: cx + 122 * Math.cos(a), y2: cy + 122 * Math.sin(a) }
+  })
+  const pages = [
+    { x: 940, y: 300, rot: -8 },
+    { x: 980, y: 280, rot: -3 },
+    { x: 1020, y: 262, rot: 2 },
+  ]
+  return (
+    <Svg>
+      <Glow id={`${id}g`} cx={1290} cy={240} r={460} color="var(--chart-2)" opacity={0.14} />
+      <Glow id={`${id}g2`} cx={980} cy={120} r={380} color="var(--primary)" opacity={0.12} />
+      {pages.map((p, i) => (
+        <g key={i} transform={`rotate(${p.rot} ${p.x + 110} ${p.y + 140})`}>
+          <rect x={p.x} y={p.y} width="220" height="280" rx="10" fill="var(--surface)" fillOpacity="0.5" stroke="var(--primary)" strokeOpacity={0.12 + i * 0.05} />
+          {Array.from({ length: 7 }, (_, j) => (
+            <line key={j} x1={p.x + 26} x2={p.x + (j % 3 === 2 ? 140 : 194)} y1={p.y + 50 + j * 28} y2={p.y + 50 + j * 28} stroke="var(--primary)" strokeOpacity={0.1 + i * 0.03} strokeWidth="5" strokeLinecap="round" />
+          ))}
+        </g>
+      ))}
+      <g transform={`rotate(-12 ${cx} ${cy})`}>
+        <path d={`${scallop} Z`} fill="var(--chart-2)" fillOpacity="0.08" stroke="var(--chart-2)" strokeOpacity="0.4" strokeWidth="2" />
+        <circle cx={cx} cy={cy} r="132" fill="none" stroke="var(--chart-2)" strokeOpacity="0.35" strokeWidth="2.5" />
+        <circle cx={cx} cy={cy} r="100" fill="none" stroke="var(--chart-2)" strokeOpacity="0.3" strokeWidth="1.5" strokeDasharray="4 6" />
+        <g stroke="var(--chart-2)" strokeOpacity="0.3" strokeWidth="1.5">
+          {ticks.map((t, i) => (
+            <line key={i} x1={t.x1.toFixed(1)} y1={t.y1.toFixed(1)} x2={t.x2.toFixed(1)} y2={t.y2.toFixed(1)} />
+          ))}
+        </g>
+        <path d={`M${cx - 46} ${cy + 2} l32 32 l62 -70`} fill="none" stroke="var(--chart-2)" strokeOpacity="0.55" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      <g fill="none" stroke="var(--primary)" strokeOpacity="0.1">
+        {Array.from({ length: 4 }, (_, i) => (
+          <path key={i} d={`M 760 ${560 + i * 10} C 1000 ${520 + i * 10}, 1300 ${600 + i * 10}, 1600 ${540 + i * 10}`} />
+        ))}
+      </g>
+    </Svg>
+  )
+})
+
 /**
  * The artwork for one page, placed behind its top area and faded into the page
  * background so content always reads clearly. Purely decorative (aria-hidden).
@@ -880,6 +932,7 @@ export function Backdrop({ variant, height = 560, className, from, to, fade = tr
     floorplan: <FloorPlan />,
     storyboard: <Storyboard />,
     coins: <Coins />,
+    stamp: <Stamp />,
   }[variant]
   return (
     <div

@@ -178,6 +178,10 @@ _owner_db.setdefault("OPTIONS", {})["options"] = "-c search_path=identity,public
 # alias (and replica) mirror it. Without this, Django makes owner depend on default
 # while default mirrors owner -> "Circular dependency in TEST[DEPENDENCIES]".
 _owner_db["TEST"] = {"DEPENDENCIES": []}
+# Parallel test runs (one per working area) each use their own test database: two runs
+# sharing one get in each other's way. Unset = Django's default name.
+if os.getenv("TEST_DB_NAME"):
+    _owner_db["TEST"]["NAME"] = os.environ["TEST_DB_NAME"]
 if "-pooler" in (_owner_db.get("HOST") or ""):
     from django.core.exceptions import ImproperlyConfigured
 

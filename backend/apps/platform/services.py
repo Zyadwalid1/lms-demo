@@ -12,7 +12,7 @@ from core import cache
 from core.middleware import request_id_var
 from core.tenancy import tenant_context
 
-from . import outbox
+from . import outbox, registry
 from .models import Entitlement, Setting, WebhookEvent
 
 log = logging.getLogger(__name__)
@@ -26,13 +26,17 @@ def _load_setting(key: str):
 
 
 def get_setting(key: str, default=None):
-    """Cached for 60 s; set_setting() invalidates at once."""
+    """Cached for 60 s; set_setting() invalidates at once. A registered setting with no
+    row yet falls back to its registry default (apps.platform.registry)."""
     value = cache.get_or_set("setting", key, lambda: _load_setting(key), timeout=60)
-    return default if value == _MISSING else value
+    if value == _MISSING:
+        return registry.default(key) if default is None else default
+    return value
 
 
 def set_setting(*, key: str, value, by, description: str = "", is_public: bool | None = None) -> Setting:
     """Staff only (RLS: reference table)."""
+    value = registry.validate(key, value)
     defaults = {"value": value, "updated_by": by}
     if description:
         defaults["description"] = description
@@ -44,7 +48,13 @@ def set_setting(*, key: str, value, by, description: str = "", is_public: bool |
 
 
 def public_settings() -> dict:
-    return dict(Setting.objects.filter(is_public=True).values_list("key", "value"))
+    """Registered public settings (with their defaults) plus any other row marked public."""
+    out = {d.key: d.default for d in registry.SETTINGS if d.public}
+    stored = dict(Setting.objects.filter(key__in=list(out)).values_list("key", "value"))
+    out.update(stored)
+    others = Setting.objects.filter(is_public=True).exclude(key__in=list(registry.BY_KEY))
+    out.update(dict(others.values_list("key", "value")))  # registered keys follow the registry only
+    return out
 
 
 # ---------------------------------------------------------------- entitlements

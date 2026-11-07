@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Building2, ClipboardCheck, CreditCard, DollarSign, FileBarChart, GraduationCap, LayoutDashboard, LifeBuoy, MessageSquare, Network, ScrollText, Settings, ShieldCheck, Star, UserPlus, Users, Wallet } from 'lucide-react'
+import { BookOpen, Building2, ClipboardCheck, CreditCard, DollarSign, FileBarChart, GraduationCap, LayoutDashboard, MessageSquare, Network, ShieldCheck, UserPlus, Users, Wallet } from 'lucide-react'
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Outlet } from 'react-router-dom'
 
@@ -6,7 +6,7 @@ import { BusinessLayout } from '@/components/layout/BusinessLayout'
 import { LearnerLayout } from '@/components/layout/LearnerLayout'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { type NavSection, WorkspaceLayout } from '@/components/layout/WorkspaceLayout'
-import { ComingSoon, NotFoundPage } from '@/pages/StatusPages'
+import { NotFoundPage } from '@/pages/StatusPages'
 
 import { PageSpinner, RequireAuth, RequireManager, RequireRole } from './guards'
 
@@ -57,9 +57,27 @@ const GradingPage = named(() => import('@/pages/studio/GradingPage'), 'GradingPa
 const QuestionsPage = named(() => import('@/pages/studio/QuestionsPage'), 'QuestionsPage')
 const RevenuePage = named(() => import('@/pages/studio/RevenuePage'), 'RevenuePage')
 const PayoutsPage = named(() => import('@/pages/studio/PayoutsPage'), 'PayoutsPage')
+const ConsoleShell = named(() => import('@/pages/console/ConsoleShell'), 'ConsoleShell')
+const ConsoleDashboardPage = named(() => import('@/pages/console/DashboardPage'), 'ConsoleDashboardPage')
+const ConsoleCoursesPage = named(() => import('@/pages/console/CoursesPage'), 'ConsoleCoursesPage')
+const ConsoleInstructorsPage = named(() => import('@/pages/console/InstructorsPage'), 'ConsoleInstructorsPage')
+const ConsoleStudentsPage = named(() => import('@/pages/console/StudentsPage'), 'ConsoleStudentsPage')
+const ConsoleSalesPage = named(() => import('@/pages/console/SalesPage'), 'ConsoleSalesPage')
+const ConsoleSubscriptionsPage = named(() => import('@/pages/console/SubscriptionsPage'), 'ConsoleSubscriptionsPage')
+const ConsolePricingPage = named(() => import('@/pages/console/PricingPage'), 'ConsolePricingPage')
+const ConsolePromotionsPage = named(() => import('@/pages/console/PromotionsPage'), 'ConsolePromotionsPage')
+const ConsoleCommissionsPage = named(() => import('@/pages/console/CommissionsPage'), 'ConsoleCommissionsPage')
+const ConsolePayoutsPage = named(() => import('@/pages/console/PayoutsPage'), 'ConsolePayoutsPage')
+const ConsoleReportsPage = named(() => import('@/pages/console/ReportsPage'), 'ConsoleReportsPage')
+const ConsoleApprovalsPage = named(() => import('@/pages/console/ApprovalsPage'), 'ConsoleApprovalsPage')
+const ConsoleReviewsPage = named(() => import('@/pages/console/ReviewsPage'), 'ConsoleReviewsPage')
+const ConsoleCommunicationsPage = named(() => import('@/pages/console/CommunicationsPage'), 'ConsoleCommunicationsPage')
+const ConsoleCertificatesPage = named(() => import('@/pages/console/CertificatesPage'), 'ConsoleCertificatesPage')
+const ConsoleCompaniesPage = named(() => import('@/pages/console/CompaniesPage'), 'ConsoleCompaniesPage')
+const ConsoleSettingsPage = named(() => import('@/pages/console/SettingsPage'), 'ConsoleSettingsPage')
+const ConsoleAuditPage = named(() => import('@/pages/console/AuditPage'), 'ConsoleAuditPage')
 
 const page = (el: ReactNode) => <Suspense fallback={<PageSpinner />}>{el}</Suspense>
-const soon = (title: string, milestone: string) => <ComingSoon title={title} milestone={milestone} />
 
 const businessNav: NavSection[] = [
   { items: [{ to: '/business', label: 'Overview', Icon: LayoutDashboard, end: true }] },
@@ -99,14 +117,6 @@ const studioNav: NavSection[] = [
   { items: [{ to: '/studio', label: 'Dashboard', Icon: LayoutDashboard, end: true }, { to: '/studio/courses', label: 'My courses', Icon: BookOpen }] },
   { title: 'Learners', items: [{ to: '/studio/students', label: 'Students', Icon: Users }, { to: '/studio/grading', label: 'Assignments', Icon: ClipboardCheck }, { to: '/studio/questions', label: 'Q&A and reviews', Icon: MessageSquare }] },
   { title: 'Money', items: [{ to: '/studio/revenue', label: 'Sales & earnings', Icon: DollarSign }, { to: '/studio/payouts', label: 'Payouts', Icon: Wallet }] },
-]
-
-const consoleNav: NavSection[] = [
-  { items: [{ to: '/console', label: 'Overview', Icon: LayoutDashboard, end: true }, { to: '/console/reports', label: 'Reports', Icon: BarChart3 }] },
-  { title: 'Catalogue', items: [{ to: '/console/review', label: 'Course review', Icon: ClipboardCheck }, { to: '/console/instructors', label: 'Instructors', Icon: GraduationCap }] },
-  { title: 'Money', items: [{ to: '/console/orders', label: 'Orders & refunds', Icon: CreditCard }, { to: '/console/payouts', label: 'Payouts', Icon: Wallet }, { to: '/console/currencies', label: 'Currencies', Icon: DollarSign }] },
-  { title: 'People', items: [{ to: '/console/users', label: 'Users', Icon: Users }, { to: '/console/tickets', label: 'Support', Icon: LifeBuoy }, { to: '/console/reviews', label: 'Reviews', Icon: Star }] },
-  { title: 'System', items: [{ to: '/console/audit', label: 'Audit log', Icon: ScrollText }, { to: '/console/settings', label: 'Settings', Icon: Settings }] },
 ]
 
 export const router = createBrowserRouter([
@@ -204,12 +214,30 @@ export const router = createBrowserRouter([
     path: '/console',
     element: (
       <RequireAuth>
-        <RequireRole allowed="staff">
-          <WorkspaceLayout area="Admin" sections={consoleNav} art="circuit" />
-        </RequireRole>
+        <RequireRole allowed="staff">{page(<ConsoleShell />)}</RequireRole>
       </RequireAuth>
     ),
-    children: [{ path: '*', element: soon('Admin console', 'M5 (console)') }, { index: true, element: soon('Admin overview', 'M5 (console)') }],
+    children: [
+      { index: true, element: page(<ConsoleDashboardPage />) },
+      { path: 'courses', element: page(<ConsoleCoursesPage />), handle: { art: 'mosaic' } },
+      { path: 'instructors', element: page(<ConsoleInstructorsPage />), handle: { art: 'orgchart' } },
+      { path: 'students', element: page(<ConsoleStudentsPage />), handle: { art: 'orgchart' } },
+      { path: 'sales', element: page(<ConsoleSalesPage />), handle: { art: 'coins' } },
+      { path: 'subscriptions', element: page(<ConsoleSubscriptionsPage />), handle: { art: 'coins' } },
+      { path: 'pricing', element: page(<ConsolePricingPage />), handle: { art: 'coins' } },
+      { path: 'promotions', element: page(<ConsolePromotionsPage />), handle: { art: 'coins' } },
+      { path: 'commissions', element: page(<ConsoleCommissionsPage />), handle: { art: 'coins' } },
+      { path: 'payouts', element: page(<ConsolePayoutsPage />), handle: { art: 'coins' } },
+      { path: 'reports', element: page(<ConsoleReportsPage />), handle: { art: 'chartgrid' } },
+      { path: 'approvals', element: page(<ConsoleApprovalsPage />), handle: { art: 'stamp' } },
+      { path: 'reviews', element: page(<ConsoleReviewsPage />), handle: { art: 'bubbles' } },
+      { path: 'communications', element: page(<ConsoleCommunicationsPage />), handle: { art: 'bubbles' } },
+      { path: 'certificates', element: page(<ConsoleCertificatesPage />), handle: { art: 'guilloche' } },
+      { path: 'companies', element: page(<ConsoleCompaniesPage />), handle: { art: 'contours' } },
+      { path: 'settings', element: page(<ConsoleSettingsPage />), handle: { art: 'dials' } },
+      { path: 'audit', element: page(<ConsoleAuditPage />) },
+      { path: '*', element: <NotFoundPage /> },
+    ],
   },
   { path: '*', element: <Outlet /> },
 ])

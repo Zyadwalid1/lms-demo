@@ -156,6 +156,6 @@ Part of the M5 brief. Each line is a control shown in an approved mockup. Build 
 - [ ] Save / discard changes (new)
 
 ## Console-wide
-- [ ] Global search (users, instructors, courses, orders, tickets, certificates) (new)
-- [ ] Approvals badge count in the nav (new)
+- [x] Global search (users, instructors, courses, orders, tickets, certificates) (new)
+- [x] Approvals badge count in the nav (new)
 - [ ] Staff notification bell (exists for all users; staff kinds new)

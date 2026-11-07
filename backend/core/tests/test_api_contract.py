@@ -48,6 +48,7 @@ TYPED_PREFIXES = (
     "/api/v1/learning/", "/api/v1/engagement/", "/api/v1/identity/", "/api/v1/compliance/my",  # M2
     "/api/v1/org/", "/api/v1/compliance/",  # M3
     "/api/v1/studio/",  # M4
+    "/api/v1/console/", "/api/v1/platform/",  # M5
 )  # fmt: skip
 NOT_JSON = {  # files and webhooks
     "/api/v1/commerce/webhooks/stripe",
