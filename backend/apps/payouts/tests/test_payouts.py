@@ -138,7 +138,8 @@ class PayoutsTest(SchemaTransactionTestCase):
         self.assertEqual(services.create_payouts(period_end=date(2026, 11, 30), now=now), [])  # still on hold
         with tenant_context(user_id=self.ana.id):
             self.assertEqual(
-                selectors.balance(user_id=self.ana.id), {"available": 0, "pending": 1294, "paid": 0}
+                selectors.balance(user_id=self.ana.id),
+                {"available": 0, "pending": 1294, "paid": 0, "in_payout": 0},
             )
 
         # refund inside the window: a negative line that cancels the sale in the same bundle

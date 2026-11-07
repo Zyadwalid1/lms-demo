@@ -178,6 +178,7 @@ class PayoutRequest(BaseModel):
         PAID = "paid", "Paid"
         REJECTED = "rejected", "Rejected"
         DISPUTED = "disputed", "Disputed"
+        FAILED = "failed", "Failed"  # the manual transfer bounced; the money went back
 
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="+", db_index=False)
     amount_gbp_minor = models.PositiveIntegerField()
