@@ -116,7 +116,8 @@ def cart(request, currency: str | None = None, coupon: str | None = None):
         "subtotal_minor": priced["subtotal"],
         "discount_minor": priced["subtotal"] - priced["total"],
         "total_minor": priced["total"],
-        "coupon": priced["coupon"].code if priced["coupon"] else None,
+        "coupon": priced["coupon"].code if priced["coupon"] else priced["promo_code"],
+        "promotion": priced["promotion"].name if priced["promotion"] else None,
         "coupon_error": coupon_error,
     }
 
@@ -167,7 +168,7 @@ def checkout(request, body: CheckoutIn):
 
 
 def _order_out(order: Order) -> dict:
-    window = timedelta(days=settings.REFUND_WINDOW_DAYS)
+    window = timedelta(days=services.refund_window_days())
     open_window = order.paid_at is not None and timezone.now() - order.paid_at < window
     return {
         "id": order.id, "status": order.status, "currency": order.currency_id, "exponent": order.currency.exponent,
@@ -233,6 +234,7 @@ class SubscribeIn(Schema):
     plan_id: UUID
     currency: str = Field(..., min_length=3, max_length=3)
     seats: int = Field(1, ge=1, le=100000)
+    promo_code: str = Field("", max_length=40)
 
 
 class AddonIn(Schema):
@@ -264,7 +266,7 @@ def subscribe(request, body: SubscribeIn):
     org_id = _billing_owner(request)
     plan = get_object_or_404(Plan, pk=body.plan_id, is_active=True)
     r = services.start_subscription(user=request.user, plan=plan, currency=body.currency.upper(), seats=body.seats,
-                                    org_id=org_id)  # fmt: skip
+                                    org_id=org_id, promo_code=body.promo_code)  # fmt: skip
     if org_id:
         audit_request(request, "billing.subscribe", "subscription", r["subscription"].id, {"plan": plan.code})
     return {"subscription_id": r["subscription"].id, "checkout_url": r["checkout_url"]}
