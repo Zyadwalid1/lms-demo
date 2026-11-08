@@ -145,7 +145,9 @@ def _apply_batch(batch: list[tuple]) -> None:
 
 def _complete_watched_videos(enrollment_ids: set) -> None:
     """Mark videos complete once watched_sec reaches the lecture's min_watch_pct:
-    ONE set-based UPDATE for the whole batch, then refresh affected enrolments."""
+    ONE set-based UPDATE for the whole batch, then refresh affected enrolments. The
+    length is the lecture's, or Bunny's for the video when the lecture has none (a video
+    attached before Bunny finished encoding it)."""
     from .services import refresh_course_progress
 
     with connection.cursor() as cur:
@@ -155,12 +157,14 @@ def _complete_watched_videos(enrollment_ids: set) -> None:
             FROM learning.enrollments e
             JOIN catalog.courses c ON c.id = e.course_id
             JOIN catalog.lectures l ON l.version_id = c.live_version_id
+            LEFT JOIN catalog.media_assets a ON a.id = l.video_id
+            CROSS JOIN LATERAL (SELECT COALESCE(NULLIF(l.duration_sec, 0), a.duration_sec, 0) AS sec) d
             WHERE p.enrollment_id = e.id
               AND p.enrollment_id = ANY(%s::uuid[])
               AND p.completed_at IS NULL
               AND l.lecture_key = p.lecture_key
-              AND l.kind = 'video' AND l.duration_sec > 0
-              AND p.watched_sec * 100 >= l.duration_sec * l.min_watch_pct
+              AND l.kind = 'video' AND d.sec > 0
+              AND p.watched_sec * 100 >= d.sec * l.min_watch_pct
             RETURNING p.enrollment_id
             """,
             [list(enrollment_ids)],

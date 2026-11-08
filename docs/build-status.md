@@ -17,6 +17,13 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
 ## M5 review fixes (2026-11-08, planner review; commit "M5 review fixes")
+- **Bug (user): a fully watched video said parts were skipped.** The lecture was saved with length 0 (the video
+  was attached before Bunny finished encoding it), and completion ignored lectures without a length. Completion
+  now uses Bunny's length for the video when the lecture has none, and when Bunny reports a length, lectures
+  still at 0 get it. Tested. Existing lectures already at 0 with a ready video keep showing 0 as their length
+  (a one-off data fix on Neon needs the user's OK); they do complete now.
+- **Bug (user): "Learning as" Personal / company did nothing.** Switching removed cached data but did not reload
+  what was on screen. It now resets those queries (the page reloads for the new space) and confirms the switch.
 - **Bug (user, 2026-11-08): "Lecture finished" but the lecture wasn't ticked.** With Redis on, watch time sits
   in Redis until the once-a-minute Celery flush, so the player's check 2.5 s after the end found nothing. The
   beat sent when a video ends (`heartbeat` with `ended: true`) is now written at once and returns

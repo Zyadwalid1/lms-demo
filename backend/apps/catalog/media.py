@@ -56,9 +56,21 @@ def sync_from_bunny(asset: MediaAsset) -> MediaAsset:
             fields["encode_progress"] = 100
     with tenant_context(staff=True):
         MediaAsset.objects.filter(pk=asset.pk).update(updated_at=timezone.now(), **fields)
+        if fields.get("duration_sec") and not asset.duration_sec:
+            fill_lecture_lengths(asset.pk, fields["duration_sec"])
     for k, val in fields.items():
         setattr(asset, k, val)
     return asset
+
+
+def fill_lecture_lengths(asset_id, seconds: int) -> int:
+    """Lectures that got this video before Bunny knew its length were saved with 0:
+    give them Bunny's length (only those still at 0; a length set by hand stays)."""
+    from .models import Lecture
+    from .services import authoring
+
+    with authoring():
+        return Lecture.objects.filter(video_id=asset_id, duration_sec=0).update(duration_sec=seconds)
 
 
 # ---------------------------------------------------------------- parts, key moments, thumbnails
