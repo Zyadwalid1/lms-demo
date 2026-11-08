@@ -28,3 +28,18 @@ Answers to NEEDS-USER are at the bottom of that file (migrations: you run them; 
 8. Fix the "103 tests" line in the build-status table.
 Lean checks as in M5 section V.
 
+## 2026-11-08 (after "M5 review fixes"): planner review: approved, three small items
+Reviewed 5103bc6: invites table is additive with staff-only RLS, cancelled links are refused, the QR is drawn
+server-side from the session key (never returned as text), instructors can only pick approved templates,
+default currency order is right. Good work. Please:
+1. **Google / Microsoft sign-in callback (not done yet).** With `HEADLESS_ONLY`, provider callbacks are still served
+   by allauth's standard URLs. Add `path("accounts/", include("allauth.urls"))` to `backend/config/urls.py` and
+   proxy `/accounts` to `http://localhost:8000` in `frontend/vite.config.ts`. Check Django sends
+   `redirect_uri=http://localhost:5173/accounts/google/login/callback/` (the user registered that and the 8000 one
+   in Google Cloud). Same pattern for Microsoft. Add a test that `reverse("google_callback")` resolves.
+2. **build-status correction.** The planner never ran migrations or seeds (it only reads). Dev was already
+   migrated before your check: write "already migrated and seeded when checked (08:26 UTC)" without naming who.
+3. **build-status "Next"** still says "M5 console, starting fresh": update it (M5 done; next M6 part 1
+   placeholders + part 7 deployment readiness, then staging, then the rest of M6 alongside the tester).
+Commit as "Sign-in callbacks + status".
+
