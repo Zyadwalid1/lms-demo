@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardBody, CardHeader } from '@/components/ui/card'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field, Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AuthError, ReauthNeeded, reauthenticate, recoveryCodes, startTotp, useActivateTotp, useAuthenticators, useDeactivateTotp } from '@/features/identity/auth'
 import { usePublicSettings } from '@/features/platform/api'
@@ -35,7 +36,7 @@ function ReauthDialog({ open, onDone, onCancel }: { open: boolean; onDone: () =>
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
       <DialogContent title="Confirm it's you" description="Enter your password to change 2-step sign-in.">
         <form className="grid gap-4" onSubmit={submit}>
-          <Field label="Password" error={error || undefined}>{(f) => <Input {...f} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />}</Field>
+          <Field label="Password" error={error || undefined}>{(f) => <PasswordInput {...f} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />}</Field>
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
             <Button type="submit" loading={busy}>Continue</Button>

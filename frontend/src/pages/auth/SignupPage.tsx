@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Field, Input } from '@/components/ui/input'
+import { PasswordInput, PasswordStrength } from '@/components/ui/password'
 import { AuthError, useSignup } from '@/features/identity/auth'
 import { usePublicSettings } from '@/features/platform/api'
 import { safeNext } from '@/lib/next'
@@ -19,6 +20,8 @@ export function SignupPage() {
   const signup = useSignup()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [mismatch, setMismatch] = useState(false)
   const [sent, setSent] = useState(false)
   const err = signup.error instanceof AuthError ? signup.error : null
   const { settings } = usePublicSettings()
@@ -26,6 +29,7 @@ export function SignupPage() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
+    if (password !== confirm) return setMismatch(true)
     signup.mutate({ email, password }, { onSuccess: (r) => (r === 'verify-email' ? setSent(true) : navigate(next, { replace: true })) })
   }
 
@@ -85,8 +89,14 @@ export function SignupPage() {
         <Field label="Email" error={err?.fields.email}>
           {(p) => <Input {...p} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />}
         </Field>
-        <Field label="Password" hint={`At least ${minLength} characters, not a common password.`} error={err?.fields.password}>
-          {(p) => <Input {...p} type="password" autoComplete="new-password" required minLength={minLength} value={password} onChange={(e) => setPassword(e.target.value)} />}
+        <div className="grid gap-2">
+          <Field label="Password" hint={`At least ${minLength} characters, not a common password.`} error={err?.fields.password}>
+            {(p) => <PasswordInput {...p} autoComplete="new-password" required minLength={minLength} value={password} onChange={(e) => (setPassword(e.target.value), setMismatch(false))} />}
+          </Field>
+          <PasswordStrength password={password} minLength={minLength} />
+        </div>
+        <Field label="Confirm password" error={mismatch ? "The passwords don't match." : undefined}>
+          {(p) => <PasswordInput {...p} autoComplete="new-password" required value={confirm} onChange={(e) => (setConfirm(e.target.value), setMismatch(false))} />}
         </Field>
         <Button type="submit" size="lg" loading={signup.isPending} className="w-full">
           Create account

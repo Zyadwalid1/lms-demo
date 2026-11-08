@@ -17,6 +17,10 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
 ## M5 review fixes (2026-11-08, planner review; commit "M5 review fixes")
+- **Forgot password (user request):** `/account/password/reset` (email → link, same answer for unknown addresses)
+  and `/account/password/reset/key/:key` (link checked first; new password with show/hide, strength meter and
+  confirm; expired or used links offer a new one). Uses allauth's headless reset endpoints; the email links to
+  `FRONTEND_URL`. Backend test covers the whole flow, one-time links and unknown emails.
 - **Bug (user): a fully watched video said parts were skipped.** The lecture was saved with length 0 (the video
   was attached before Bunny finished encoding it), and completion ignored lectures without a length. Completion
   now uses Bunny's length for the video when the lecture has none, and when Bunny reports a length, lectures
@@ -106,6 +110,7 @@ route, light/dark screenshots vs mockups, reviewer agent.
 - **M5 (dev and e2e, same command; adds tables, columns and rows only, checked with `sqlmigrate`):** catalog **0006_console**, learning **0004_console** and **0005_console_a_verify** (a new certificate-check function; the old one stays), commerce **0004_console**, payouts **0003_console**, engagement **0006_console** and **0007_console_templates** (inserts notification wording), payouts **0004_console_c_request_failed** (choices only, no SQL), platform **0003_console_settings** (inserts settings). The console fails on Neon until these run.
 
 ## Settings still needed
+- **Production: `FRONTEND_URL`** = the site's public https address (e.g. `https://learn.example.com`). Every link in emails (sign-up confirmation, notifications, reminders) and Stripe's return pages use it. Unset, it was `http://localhost:5173`; production now refuses to start without a public https value.
 - Azure storage account → Resource sharing (CORS) → Blob service: allow the frontend origin, methods PUT/GET/HEAD, headers `*`. Without it, browser file uploads fail (assignment hand-ins, and later studio files).
 - Google/Microsoft sign-in: app registrations (`MICROSOFT_LOGIN_*`, `GOOGLE_*`); the buttons appear automatically.
 
