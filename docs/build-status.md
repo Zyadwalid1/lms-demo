@@ -17,6 +17,11 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
 ## M5 review fixes (2026-11-08, planner review; commit "M5 review fixes")
+- **Bug (user, 2026-11-08): "Lecture finished" but the lecture wasn't ticked.** With Redis on, watch time sits
+  in Redis until the once-a-minute Celery flush, so the player's check 2.5 s after the end found nothing. The
+  beat sent when a video ends (`heartbeat` with `ended: true`) is now written at once and returns
+  `completed`; the player says "Lecture complete", or explains that skipped parts mean it isn't complete yet.
+  The rule is unchanged (real watch time ≥ the lecture's minimum, 90% by default). Tests added.
 - **Neon migrations and seeds (user said Claude Code runs them).** `showmigrations` was checked before each run;
   every pending migration was additive. **dev:** already migrated and seeded when checked (by the planner, 08:26 UTC);
   then identity **0003_instructor_invites** applied, and `seed_console_demo` re-run (added the instructor earnings

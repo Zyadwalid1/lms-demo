@@ -29,6 +29,7 @@ from .schemas import (
     CertificateOut,
     DownloadOut,
     HeartbeatIn,
+    HeartbeatOut,
     LectureContent,
     MyCoursePage,
     NoteIn,
@@ -250,9 +251,10 @@ def download_resource(request, enrollment_id: str, lecture_key: str, resource_id
     return {"url": resources.download_url(r), "expires_in": 3600}
 
 
-@router.post("/enrollments/{enrollment_id}/heartbeat", response=OkOut)
+@router.post("/enrollments/{enrollment_id}/heartbeat", response=HeartbeatOut)
 def heartbeat(request, enrollment_id: str, body: HeartbeatIn):
-    """Every ~30 s while a video plays. Buffered in Redis and written in batches."""
+    """Every ~30 s while a video plays. Buffered in Redis and written in batches; the
+    beat sent when the video ends is written at once and reports whether it completed."""
     e = _mine(request, enrollment_id)
     _lecture(e, body.lecture_key)
     progress.record_heartbeat(
@@ -260,8 +262,9 @@ def heartbeat(request, enrollment_id: str, body: HeartbeatIn):
         lecture_key=body.lecture_key,
         position_sec=body.position_sec,
         watched_delta_sec=body.watched_sec,
+        ended=body.ended,
     )
-    return {"ok": True}
+    return {"ok": True, "completed": body.ended and progress.is_complete(e, body.lecture_key)}
 
 
 @router.post("/enrollments/{enrollment_id}/lectures/{lecture_key}/complete", response=ProgressOut)

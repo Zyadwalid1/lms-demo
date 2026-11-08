@@ -38,9 +38,12 @@ def _redis():
 
 
 def record_heartbeat(
-    *, enrollment: Enrollment, lecture_key, position_sec: int, watched_delta_sec: int
+    *, enrollment: Enrollment, lecture_key, position_sec: int, watched_delta_sec: int, ended: bool = False
 ) -> None:
-    """Called by the player endpoint. Validation of ownership happens in the API layer."""
+    """Called by the player endpoint. Validation of ownership happens in the API layer.
+    `ended` (the video reached its end): this lecture's buffer is written now, so the
+    learner sees the lecture ticked at once instead of after the next flush. The rule
+    is unchanged: it completes only if enough was really watched."""
     watched = max(0, min(int(watched_delta_sec), MAX_WATCHED_PER_BEAT))
     position = max(0, int(position_sec))
     member = f"{enrollment.id}:{lecture_key}"
@@ -50,10 +53,27 @@ def record_heartbeat(
         return
     key = f"hb:{member}"
     pipe = r.pipeline()
+    if ended:  # take what is buffered for this lecture, add this beat, write it now
+        pipe.hgetall(key)
+        pipe.delete(key)
+        pipe.srem(DIRTY_SET, member)
+        data = {k.decode() if isinstance(k, bytes) else k: int(v) for k, v in pipe.execute()[0].items()}
+        _apply_batch(
+            [(enrollment.id, uuid.UUID(str(lecture_key)), position, data.get("watched", 0) + watched)]
+        )
+        return
     pipe.hset(key, "pos", position)
     pipe.hincrby(key, "watched", watched)
     pipe.sadd(DIRTY_SET, member)
     pipe.execute()
+
+
+def is_complete(enrollment: Enrollment, lecture_key) -> bool:
+    from .models import LectureProgress
+
+    return LectureProgress.objects.filter(
+        enrollment=enrollment, lecture_key=lecture_key, completed_at__isnull=False
+    ).exists()
 
 
 def flush_heartbeats() -> int:

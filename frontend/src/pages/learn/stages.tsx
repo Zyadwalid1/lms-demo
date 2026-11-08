@@ -21,7 +21,7 @@ const MAX_BEAT = 600 // the server caps one beat at 10 minutes of watching
  * Bunny video with resume and watch-time tracking. Only seconds actually played count
  * (seeking forward does not), sent every 30 s and when the learner pauses or leaves.
  */
-export function VideoStage({ lecture, enrollmentId, onEnded, startAt }: StageProps & { onEnded: () => void; startAt?: number }) {
+export function VideoStage({ lecture, enrollmentId, onEnded, startAt }: StageProps & { onEnded: (completed: boolean) => void; startAt?: number }) {
   const video = lecture.video
   const frame = useRef<HTMLIFrameElement>(null)
   const refresh = useRefreshProgress(enrollmentId)
@@ -65,10 +65,16 @@ export function VideoStage({ lecture, enrollmentId, onEnded, startAt }: StagePro
         })
         p.on('pause', () => flush())
         p.on('ended', () => {
-          flush()
-          // the server credits watch time in batches; look again shortly for the tick
-          window.setTimeout(() => void refresh(), 2500)
-          onEndedRef.current()
+          // the end beat is written at once and says whether the lecture is now complete
+          const watched = Math.min(MAX_BEAT, Math.round(state.watched))
+          state.watched -= watched
+          state.sentPos = state.pos
+          sendHeartbeat(enrollmentId, { lecture_key: lecture.key, position_sec: Math.floor(state.pos), watched_sec: watched, ended: true })
+            .then((r) => {
+              onEndedRef.current(!!r.data?.completed)
+              return refresh()
+            })
+            .catch(() => undefined)
         })
       })
       .catch(() => undefined) // without player.js the video still plays; only tracking is lost

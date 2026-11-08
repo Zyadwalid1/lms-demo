@@ -301,11 +301,12 @@ function Stage({ lecture, loading, error, enrollmentId, slug, startAt, onRetry }
         <VideoStage
           {...props}
           startAt={startAt}
-          onEnded={() =>
-            lecture.next_key
-              ? toast('Lecture finished', { action: { label: 'Next lecture', onClick: () => document.getElementById('next-lecture')?.click() } })
-              : undefined
-          }
+          onEnded={(completed) => {
+            const next = lecture.next_key ? { action: { label: 'Next lecture', onClick: () => document.getElementById('next-lecture')?.click() } } : {}
+            if (completed) toast.success('Lecture complete', next)
+            else if (!lecture.completed) toast('Lecture finished', { description: 'Parts were skipped, so it isn’t marked complete yet. Watch the rest to complete it.', ...next })
+            else if (lecture.next_key) toast('Lecture finished', next)
+          }}
         />
       ) : lecture.kind === 'quiz' && lecture.quiz ? (
         <QuizStage {...props} />

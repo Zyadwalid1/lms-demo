@@ -346,3 +346,41 @@ class HeartbeatFlushTest(LearningBase):
             p = LectureProgress.objects.get(enrollment=e, lecture_key=key)
             self.assertEqual((p.last_position_sec, p.watched_sec), (95, 90))
             self.assertIsNotNone(p.completed_at)  # 90 s of a 100 s video at 90%
+
+    def test_end_of_video_beat_is_written_at_once(self):
+        import fakeredis
+
+        fake = fakeredis.FakeRedis()
+        with tenant_context(**self.ACME):
+            course, lectures, _ = self.build_course(
+                ownership="organization", user=self.hr, org=self.acme.id, slug="fs"
+            )
+            e = services.enrol(user=self.sara, course=course, source="organization", org_id=self.acme.id)
+        video = lectures["video"].lecture_key
+        with mock.patch.object(progress, "_redis", return_value=fake):
+            progress.record_heartbeat(enrollment=e, lecture_key=video, position_sec=60, watched_delta_sec=60)
+            progress.record_heartbeat(
+                enrollment=e, lecture_key=video, position_sec=100, watched_delta_sec=30, ended=True
+            )  # 60 buffered + 30 now = 90 s of 100 s: complete without waiting for the flush
+            with tenant_context(**self.SARA_IN_ACME):
+                p = LectureProgress.objects.get(enrollment=e, lecture_key=video)
+                self.assertEqual((p.last_position_sec, p.watched_sec), (100, 90))
+                self.assertTrue(progress.is_complete(e, video))
+            self.assertEqual(progress.flush_heartbeats(), 0)  # nothing left buffered for it
+
+    def test_skipping_to_the_end_does_not_complete(self):
+        import fakeredis
+
+        with tenant_context(**self.ACME):
+            course, lectures, _ = self.build_course(
+                ownership="organization", user=self.hr, org=self.acme.id, slug="fs"
+            )
+            e = services.enrol(user=self.sara, course=course, source="organization", org_id=self.acme.id)
+        video = lectures["video"].lecture_key
+        with mock.patch.object(progress, "_redis", return_value=fakeredis.FakeRedis()):
+            progress.record_heartbeat(
+                enrollment=e, lecture_key=video, position_sec=100, watched_delta_sec=10, ended=True
+            )
+        with tenant_context(**self.SARA_IN_ACME):
+            self.assertFalse(progress.is_complete(e, video))
+            self.assertEqual(LectureProgress.objects.get(enrollment=e, lecture_key=video).watched_sec, 10)

@@ -158,6 +158,12 @@ class HeartbeatIn(Schema):
     lecture_key: UUID
     position_sec: int = Field(..., ge=0, le=86400)
     watched_sec: int = Field(..., ge=0, le=600)
+    ended: bool = False  # the video reached its end: write now and say if it completed
+
+
+class HeartbeatOut(Schema):
+    ok: bool
+    completed: bool  # this lecture is complete (always false until the video's end beat)
 
 
 class LearnerOption(Schema):

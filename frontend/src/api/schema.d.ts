@@ -626,7 +626,8 @@ export interface paths {
         put?: never;
         /**
          * Heartbeat
-         * @description Every ~30 s while a video plays. Buffered in Redis and written in batches.
+         * @description Every ~30 s while a video plays. Buffered in Redis and written in batches; the
+         *     beat sent when the video ends is written at once and reports whether it completed.
          */
         post: operations["apps_learning_api_heartbeat"];
         delete?: never;
@@ -6908,6 +6909,13 @@ export interface components {
             /** Expires In */
             expires_in: number;
         };
+        /** HeartbeatOut */
+        HeartbeatOut: {
+            /** Ok */
+            ok: boolean;
+            /** Completed */
+            completed: boolean;
+        };
         /** HeartbeatIn */
         HeartbeatIn: {
             /**
@@ -6919,6 +6927,11 @@ export interface components {
             position_sec: number;
             /** Watched Sec */
             watched_sec: number;
+            /**
+             * Ended
+             * @default false
+             */
+            ended: boolean;
         };
         /** ProgressOut */
         ProgressOut: {
@@ -15121,7 +15134,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OkOut"];
+                    "application/json": components["schemas"]["HeartbeatOut"];
                 };
             };
         };
