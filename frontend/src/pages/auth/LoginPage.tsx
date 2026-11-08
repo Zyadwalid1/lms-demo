@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { Field, Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password'
 import { AuthError, useLogin, useMfaAuthenticate } from '@/features/identity/auth'
 import { usePublicSettings } from '@/features/platform/api'
 import { safeNext } from '@/lib/next'
@@ -81,7 +82,7 @@ export function LoginPage() {
           {(p) => <Input {...p} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />}
         </Field>
         <Field label="Password" error={err?.fields.password}>
-          {(p) => <Input {...p} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />}
+          {(p) => <PasswordInput {...p} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />}
         </Field>
         <div className="-mt-1 text-right">
           <Link to="/account/password/reset" className="text-[13px] font-medium text-primary hover:underline">
