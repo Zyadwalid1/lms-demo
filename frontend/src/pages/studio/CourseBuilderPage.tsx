@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { EmptyState, ErrorState } from '@/components/ui/misc'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useMe } from '@/features/identity/auth'
 import { type StudioCourse, useStudioCourse } from '@/features/studio/api'
 import { cn } from '@/lib/cn'
 import { Link, NavLink } from '@/lib/router'
@@ -56,6 +57,7 @@ export function CourseBuilderPage() {
   const { courseId, tab: tabParam } = useParams()
   const { pathname } = useLocation()
   const { data: course, isPending, error, refetch } = useStudioCourse(courseId)
+  const { data: me } = useMe()
   const base = `/studio/courses/${courseId}`
 
   if (isPending) return <BuilderSkeleton />
@@ -90,12 +92,21 @@ export function CourseBuilderPage() {
   const status = COURSE_STATUS[course.status] ?? { label: course.status, tone: 'neutral' as const }
   const vStatus = v ? (VERSION_STATUS[v.status] ?? { label: v.status, tone: 'neutral' as const }) : null
   const live = course.status === 'published' || course.status === 'unlisted'
+  // Staff mode: a platform-owned course (console > Courses > Create company course) is
+  // built here by staff; it belongs to the platform, not to an instructor.
+  const staffMode = course.ownership === 'platform' && !!me?.is_staff
 
   return (
     <div className="min-w-0 animate-reveal">
-      <Link to="/studio/courses" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-text">
-        <ArrowLeft className="size-4" aria-hidden /> My courses
-      </Link>
+      {staffMode ? (
+        <Link to="/console/courses?tab=company" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-text">
+          <ArrowLeft className="size-4" aria-hidden /> Console courses
+        </Link>
+      ) : (
+        <Link to="/studio/courses" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-text">
+          <ArrowLeft className="size-4" aria-hidden /> My courses
+        </Link>
+      )}
       <div className="mt-2 mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight break-words sm:text-[26px]">{course.title}</h1>
@@ -110,6 +121,7 @@ export function CourseBuilderPage() {
               </span>
             ) : null}
             {course.ownership === 'organization' ? <Badge tone="outline">Company course</Badge> : null}
+            {staffMode ? <Badge tone="primary">Platform course · staff mode</Badge> : null}
           </div>
         </div>
         {live ? (
