@@ -17,6 +17,10 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
 ## M5 review fixes (2026-11-08, planner review; commit "M5 review fixes")
+- **Forgot password (user request):** `/account/password/reset` (email → link, same answer for unknown addresses)
+  and `/account/password/reset/key/:key` (link checked first; new password with show/hide, strength meter and
+  confirm; expired or used links offer a new one). Uses allauth's headless reset endpoints; the email links to
+  `FRONTEND_URL`. Backend test covers the whole flow, one-time links and unknown emails.
 - **Bug (user): a fully watched video said parts were skipped.** The lecture was saved with length 0 (the video
   was attached before Bunny finished encoding it), and completion ignored lectures without a length. Completion
   now uses Bunny's length for the video when the lecture has none, and when Bunny reports a length, lectures

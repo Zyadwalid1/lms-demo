@@ -22,6 +22,8 @@ const DesignPage = named(() => import('@/pages/DesignPage'), 'DesignPage')
 const LoginPage = named(() => import('@/pages/auth/LoginPage'), 'LoginPage')
 const SignupPage = named(() => import('@/pages/auth/SignupPage'), 'SignupPage')
 const VerifyEmailPage = named(() => import('@/pages/auth/VerifyEmailPage'), 'VerifyEmailPage')
+const ForgotPasswordPage = named(() => import('@/pages/auth/ForgotPasswordPage'), 'ForgotPasswordPage')
+const ResetPasswordPage = named(() => import('@/pages/auth/ResetPasswordPage'), 'ResetPasswordPage')
 const CartPage = named(() => import('@/pages/shop/CartPage'), 'CartPage')
 const CheckoutSuccessPage = named(() => import('@/pages/shop/CheckoutSuccessPage'), 'CheckoutSuccessPage')
 const PlansPage = named(() => import('@/pages/shop/PlansPage'), 'PlansPage')
@@ -165,6 +167,8 @@ export const router = createBrowserRouter([{ element: <SiteRoot />, children: [
   { path: '/login', element: page(<LoginPage />) },
   { path: '/signup', element: page(<SignupPage />) },
   { path: '/account/verify-email/:key', element: page(<VerifyEmailPage />) },
+  { path: '/account/password/reset', element: page(<ForgotPasswordPage />) },
+  { path: '/account/password/reset/key/:key', element: page(<ResetPasswordPage />) },
   { path: '/invite/:token', element: page(<InvitePage />) },
   {
     path: '/business',

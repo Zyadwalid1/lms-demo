@@ -14,11 +14,11 @@ type AllauthResponse = {
   errors?: { message: string; code: string; param?: string }[]
 }
 
-async function call(method: string, path: string, body?: unknown): Promise<AllauthResponse> {
+async function call(method: string, path: string, body?: unknown, headers: Record<string, string> = {}): Promise<AllauthResponse> {
   const res = await fetch(BASE + path, {
     method,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken(), ...headers },
     body: body ? JSON.stringify(body) : undefined,
   })
   const json = (await res.json().catch(() => ({ status: res.status }))) as AllauthResponse
@@ -177,6 +177,42 @@ export function useSignup() {
       if (r.status === 401 && r.data?.flows?.some((f) => f.id === 'verify_email')) return 'verify-email'
       raise(r)
     },
+  })
+}
+
+/** Forgot password: email a reset link. Answers the same whether or not the address has
+ * an account (no account probing), so the page always says "check your inbox". */
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: async (email: string) => {
+      const r = await call('POST', '/auth/password/request', { email })
+      if (r.status !== 200) raise(r)
+    },
+  })
+}
+
+/** Is the reset link still good? (expired, used or changed links are refused) */
+export function useResetKey(key: string) {
+  return useQuery({
+    queryKey: ['password-reset-key', key],
+    queryFn: async () => (await call('GET', '/auth/password/reset', undefined, { 'X-Password-Reset-Key': key })).status === 200,
+    retry: false,
+    staleTime: Infinity,
+  })
+}
+
+/** Set the new password from the emailed link. allauth answers 401 when the password was
+ * changed but the person still has to log in (we don't sign in from a reset link). */
+export function useResetPassword() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (v: { key: string; password: string }): Promise<'signed-in' | 'log-in'> => {
+      const r = await call('POST', '/auth/password/reset', v)
+      if (r.status === 200) return 'signed-in'
+      if (r.status === 401) return 'log-in'
+      raise(r)
+    },
+    onSuccess: (r) => (r === 'signed-in' ? qc.refetchQueries({ queryKey: ['me'], type: 'all' }) : undefined),
   })
 }
 
