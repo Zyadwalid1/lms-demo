@@ -116,6 +116,17 @@ route, light/dark screenshots vs mockups, reviewer agent.
 - **M5 (dev and e2e, same command; adds tables, columns and rows only, checked with `sqlmigrate`):** catalog **0006_console**, learning **0004_console** and **0005_console_a_verify** (a new certificate-check function; the old one stays), commerce **0004_console**, payouts **0003_console**, engagement **0006_console** and **0007_console_templates** (inserts notification wording), payouts **0004_console_c_request_failed** (choices only, no SQL), platform **0003_console_settings** (inserts settings). The console fails on Neon until these run.
 
 ## Settings still needed
+- **Production web server (LiteSpeed): app links opened directly return 404** (`/login`, email links such as
+  `/account/password/reset/key/…`, any refresh). The site's `.htaccess` needs the single-page-app fallback below,
+  added **after** any existing rules that send `/api` and `/_allauth` to Django (not shipped in the build, so it
+  can't overwrite those rules):
+  ```
+  RewriteEngine On
+  RewriteCond %{REQUEST_URI} !^/(api|_allauth|admin|static|media)(/|$)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ /index.html [L]
+  ```
 - **Production: `FRONTEND_URL`** = the site's public https address (e.g. `https://learn.example.com`). Every link in emails (sign-up confirmation, notifications, reminders) and Stripe's return pages use it. Unset, it was `http://localhost:5173`; production now refuses to start without a public https value.
 - Azure storage account → Resource sharing (CORS) → Blob service: allow the frontend origin, methods PUT/GET/HEAD, headers `*`. Without it, browser file uploads fail (assignment hand-ins, and later studio files).
 - Google/Microsoft sign-in: app registrations (`MICROSOFT_LOGIN_*`, `GOOGLE_*`); the buttons appear automatically.
