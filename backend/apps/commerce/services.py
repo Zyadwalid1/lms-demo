@@ -367,6 +367,27 @@ def expire_order(*, order_id) -> None:
     )
 
 
+def fail_order(*, order_id) -> bool:
+    """A delayed payment (e.g. a bank debit) failed after checkout: the order is closed
+    and the buyer is told. Only a pending order changes; a repeat does nothing."""
+    from apps.engagement.notify import notify
+
+    if not Order.objects.filter(pk=order_id, status=Order.Status.PENDING).update(
+        status=Order.Status.FAILED, updated_at=timezone.now()
+    ):
+        return False
+    order = Order.objects.get(pk=order_id)
+    titles = list(order.items.values_list("course__title", flat=True))
+    items = (
+        (titles[0] if len(titles) == 1 else f"{titles[0]} and {len(titles) - 1} more")
+        if titles
+        else "your order"
+    )
+    notify([order.user_id], "order_payment_failed", {"items": items}, url="/account/orders",
+           dedupe=f"order-failed:{order.id}")  # fmt: skip
+    return True
+
+
 def refund_window_days() -> int:
     """Client decision (refund policy): the setting, else the code default (30 days)."""
     from apps.platform.services import get_setting
@@ -544,13 +565,14 @@ def subscription_event(
     )  # fmt: skip
 
 
-def subscription_notice(sub: Subscription, what: str) -> None:
-    """started / renewed / cancelled / payment_failed, to the subscriber (and, for a
-    company plan that failed to renew, to the company's admins)."""
+def subscription_notice(sub: Subscription, what: str, *, date=None) -> None:
+    """started / renewed / cancelled / payment_failed / paused / resumed / trial_ending,
+    to the subscriber (and, for a company plan that failed to renew, to the company's
+    admins). `date` overrides the period end shown (the trial's end)."""
     from apps.engagement.notify import notify
 
     plan = sub.plan
-    end = sub.current_period_end
+    end = date or sub.current_period_end
     date = f"{end.day} {end:%b %Y}" if end else ""
     ctx = {"plan": plan.name, "date": date}
     if sub.org_id:

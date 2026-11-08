@@ -17,6 +17,12 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
 
 ## M5 review fixes (2026-11-08, planner review; commit "M5 review fixes")
+- **Stripe events added by the user (production endpoint `https://learnhub.abcsolutions.ai/api/v1/commerce/webhooks/stripe`):**
+  `checkout.session.async_payment_failed` closes the pending order as failed and tells the buyer;
+  `customer.subscription.paused / resumed / trial_will_end` tell the subscriber (access already follows the
+  status); `pending_update_*` re-sync; `invoice_payment.paid` and `payout.paid` are stored and ignored on purpose.
+  The handler also uses `invoice.payment_failed` and `charge.succeeded`: add them in Stripe. New wording:
+  engagement **0008_payment_notices** (insert only), applied on dev and e2e; production runs it on deploy. Tested.
 - **Forgot password (user request):** `/account/password/reset` (email → link, same answer for unknown addresses)
   and `/account/password/reset/key/:key` (link checked first; new password with show/hide, strength meter and
   confirm; expired or used links offer a new one). Uses allauth's headless reset endpoints; the email links to

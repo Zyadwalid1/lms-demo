@@ -116,3 +116,69 @@ class ConsoleSubscriptionsTest(CommerceBase):
         self.assertEqual(len(events), 1)
         overview = self.client.get(f"{API}/subscriptions/overview").json()
         self.assertEqual(overview["kpis"]["active"]["value"], 1)
+
+
+@mock.patch("apps.commerce.gateway.create_checkout_session", side_effect=fake_session)
+class ExtraStripeEventsTest(CommerceBase):
+    """The events added in Stripe on 2026-11-08: failed delayed payments, paused /
+    resumed subscriptions, trial ending; invoice_payment.paid and payout.paid are ignored."""
+
+    def test_failed_delayed_payment_closes_the_order(self, _s):
+        from apps.commerce.models import Order
+
+        with tenant_context(user_id=self.sara.id):
+            order = services.create_order(user=self.sara, course_ids=[self.python.id], currency="GBP")[
+                "order"
+            ]
+        failed = {"id": "evt_f1", "type": "checkout.session.async_payment_failed",
+                  "data": {"object": {"metadata": {"kind": "order", "id": str(order.id)}}}}  # fmt: skip
+        self.assertEqual(self.deliver(failed), "processed")
+        with tenant_context(**self.STAFF):
+            self.assertEqual(Order.objects.get(pk=order.pk).status, "failed")
+            self.assertEqual(
+                Notification.objects.filter(user=self.sara, kind="order_payment_failed").count(), 1
+            )
+        self.deliver({**failed, "id": "evt_f2"})  # a repeat changes nothing and tells nobody again
+        with tenant_context(**self.STAFF):
+            self.assertEqual(
+                Notification.objects.filter(user=self.sara, kind="order_payment_failed").count(), 1
+            )
+
+    def test_paused_resumed_and_trial_ending(self, _s):
+        with tenant_context(**self.STAFF):
+            plan = Plan.objects.create(
+                code="personal", name="Personal", audience="personal", interval="month"
+            )
+            PlanPrice.objects.create(
+                plan=plan, currency_id="GBP", amount_minor=1999, stripe_price_id="price_1"
+            )
+        with tenant_context(user_id=self.sara.id):
+            sub = services.start_subscription(user=self.sara, plan=plan, currency="GBP")["subscription"]
+        meta = {"kind": "subscription", "id": str(sub.id)}
+        end = int((timezone.now() + timedelta(days=30)).timestamp())
+        self.deliver({"id": "evt_p0", "type": "checkout.session.completed",
+                      "data": {"object": {"metadata": meta, "subscription": "sub_9"}}})  # fmt: skip
+
+        def event(eid, kind, status, **extra):
+            return {"id": eid, "type": kind, "data": {"object": {
+                "id": "sub_9", "status": status, "metadata": meta, **extra,
+                "items": {"data": [{"quantity": 1, "current_period_end": end, "price": {"id": "price_1"}}]}}}}  # fmt: skip
+
+        trial_end = int((timezone.now() + timedelta(days=3)).timestamp())
+        self.deliver(event("evt_p1", "customer.subscription.created", "trialing", trial_end=trial_end))
+        self.deliver(event("evt_p2", "customer.subscription.trial_will_end", "trialing", trial_end=trial_end))
+        self.deliver(event("evt_p3", "customer.subscription.paused", "paused"))
+        with tenant_context(**self.STAFF):
+            self.assertEqual(Subscription.objects.get(pk=sub.pk).status, "paused")
+        self.deliver(event("evt_p4", "customer.subscription.resumed", "active"))
+        self.deliver({"id": "evt_p5", "type": "invoice_payment.paid", "data": {"object": {"id": "inpay_1"}}})
+        self.deliver({"id": "evt_p6", "type": "payout.paid", "data": {"object": {"id": "po_1"}}})
+        with tenant_context(**self.STAFF):
+            self.assertEqual(Subscription.objects.get(pk=sub.pk).status, "active")
+            kinds = set(Notification.objects.filter(user=self.sara).values_list("kind", flat=True))
+            self.assertTrue(
+                {"subscription_trial_ending", "subscription_paused", "subscription_resumed"} <= kinds
+            )
+            trial = Notification.objects.get(user=self.sara, kind="subscription_trial_ending")
+            when = timezone.now() + timedelta(days=3)
+            self.assertIn(f"{when.day} {when:%b %Y}", trial.body)  # the trial's end, not the period's

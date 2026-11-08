@@ -67,15 +67,23 @@ def dispatch(event: dict) -> None:
         _session_completed(obj, meta)
     elif kind == "checkout.session.expired" and meta.get("kind") == "order":
         services.expire_order(order_id=meta["id"])
+    elif kind == "checkout.session.async_payment_failed" and meta.get("kind") == "order":
+        services.fail_order(order_id=meta["id"])
     elif kind.startswith("customer.subscription."):
+        # created / updated / deleted / paused / resumed / pending_update_* / trial_will_end:
+        # each carries the whole subscription, so access always follows its status
         _subscription_changed(obj, meta)
+        _subscription_notice(kind, obj, meta)
     elif kind == "invoice.paid":
         _invoice_paid(obj)
     elif kind == "invoice.payment_failed":
         _invoice_failed(obj)
     elif kind == "charge.succeeded":
         _charge_succeeded(obj)
-    # every other event type is stored and ignored
+    # every other event type is stored and ignored, on purpose:
+    # - invoice_payment.paid repeats invoice.paid (which carries the invoice we keep)
+    # - payout.paid is Stripe paying the platform's own bank account; instructor payouts
+    #   are recorded in Console > Payouts, not by Stripe
 
 
 def _session_completed(session: dict, meta: dict) -> None:
@@ -161,6 +169,23 @@ def _subscription_changed(sub: dict, meta: dict) -> None:
 
 
 LIVE = ("trialing", "active", "past_due")
+NOTICES = {
+    "customer.subscription.paused": "paused",
+    "customer.subscription.resumed": "resumed",
+    "customer.subscription.trial_will_end": "trial_ending",
+}
+
+
+def _subscription_notice(kind: str, sub: dict, meta: dict) -> None:
+    """Paused, resumed and trial-ending notices (plans only; add-ons have none)."""
+    what = NOTICES.get(kind)
+    if what is None or meta.get("kind") == "addon":
+        return
+    row = Subscription.objects.select_related("plan").filter(stripe_subscription_id=sub["id"]).first()
+    if row is not None:
+        services.subscription_notice(
+            row, what, date=_ts(sub.get("trial_end")) if what == "trial_ending" else None
+        )
 
 
 def _record_changes(row: Subscription, before: dict) -> None:
