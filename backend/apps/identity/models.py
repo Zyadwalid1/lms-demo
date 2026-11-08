@@ -105,3 +105,21 @@ class InstructorProfile(BaseModel):
 
     def __str__(self) -> str:
         return f"Instructor {self.user_id}"
+
+
+class InstructorInvite(BaseModel):
+    """A staff invitation to teach (console > Instructors). The emailed link is a signed
+    token naming this row; cancelling the row makes every link for it stop working."""
+
+    email = models.EmailField(max_length=320)
+    name = models.CharField(max_length=200, blank=True)
+    invited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="+")
+    sent_at = models.DateTimeField()
+    expires_at = models.DateTimeField()
+    send_count = models.PositiveSmallIntegerField(default=1)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = table(SCHEMA, "instructor_invites")
+        indexes = [models.Index(fields=["email"], name="ix_instructor_invite_email")]

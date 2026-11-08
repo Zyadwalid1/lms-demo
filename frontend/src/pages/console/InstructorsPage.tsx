@@ -1,4 +1,4 @@
-import { BookOpen, Check, Coins, Download, GraduationCap, Inbox, MailPlus, MoreHorizontal, Pause, Pencil, Percent, Play, Search, ShieldCheck, Wallet, X } from 'lucide-react'
+import { BookOpen, Check, Coins, Download, GraduationCap, Inbox, MailPlus, MoreHorizontal, Pause, Pencil, Percent, Play, Search, Send, ShieldCheck, Wallet, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -29,9 +29,12 @@ import {
   useEditInstructor,
   useInstructor,
   useInstructorKpis,
+  useCancelInvite,
   useInstructors,
   useInviteInstructor,
+  usePendingInvites,
   useReactivateInstructor,
+  useResendInvite,
   useSetPermissions,
   useSuspendInstructor,
 } from '@/features/console/people'
@@ -449,7 +452,70 @@ function RowMenu({ r, onOpen, onAction }: { r: InstructorRow; onOpen: () => void
   )
 }
 
-const TABS = ['all', 'applications'] as const
+function Invitations({ onInvite }: { onInvite: () => void }) {
+  const q = usePendingInvites()
+  const resend = useResendInvite()
+  const cancel = useCancelInvite()
+  const [cancelling, setCancelling] = useState<{ id: string; email: string } | null>(null)
+  if (q.error) return <ErrorState message={(q.error as Error).message} onRetry={() => void q.refetch()} />
+  if (!q.data) return <Skeleton className="m-4 h-40" />
+  if (q.data.length === 0)
+    return (
+      <EmptyState
+        icon={<MailPlus />}
+        title="No invitations waiting"
+        body="People you invite to teach appear here until they accept."
+        action={
+          <Button size="sm" onClick={onInvite}>
+            <MailPlus /> Add instructor
+          </Button>
+        }
+      />
+    )
+  return (
+    <>
+      <ul className="stagger grid gap-3 p-3 sm:p-4">
+        {q.data.map((i) => (
+          <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-4">
+            <div className="min-w-0">
+              <PersonCell name={i.name} email={i.email} />
+              <p className="mt-2 text-xs text-muted">
+                Sent {day(i.sent_at)}
+                {i.invited_by ? ` by ${i.invited_by}` : ''}
+                {i.send_count > 1 ? ` · sent ${i.send_count} times` : ''}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {i.expired ? <Badge tone="danger">Expired</Badge> : <Badge tone="info">Expires {day(i.expires_at)}</Badge>}
+              <Button
+                size="sm"
+                variant="secondary"
+                loading={resend.isPending && resend.variables === i.id}
+                onClick={() => resend.mutate(i.id, { onSuccess: () => toast.success(`Invitation sent again to ${i.email}`), onError: (e) => toast.error((e as Error).message) })}
+              >
+                <Send /> Resend
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setCancelling({ id: i.id, email: i.email })}>
+                <X /> Cancel
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <ConfirmDialog
+        open={!!cancelling}
+        onOpenChange={(o) => !o && setCancelling(null)}
+        title={`Cancel the invitation to ${cancelling?.email ?? ''}?`}
+        body="The link in their email stops working. You can invite them again later."
+        confirmLabel="Cancel invitation"
+        loading={cancel.isPending}
+        onConfirm={() => cancel.mutate(cancelling!.id, { onSuccess: () => (toast.success('Invitation cancelled'), setCancelling(null)), onError: (e) => toast.error((e as Error).message) })}
+      />
+    </>
+  )
+}
+
+const TABS = ['all', 'applications', 'invitations'] as const
 
 export function ConsoleInstructorsPage() {
   const [tab, setTab] = useTabParam(TABS, 'all')
@@ -461,6 +527,7 @@ export function ConsoleInstructorsPage() {
   const filters: InstructorFilters = { q, status, permission }
   const list = useInstructors(filters)
   const apps = useApplications()
+  const invitesQ = usePendingInvites()
   const rows = list.data?.pages.flatMap((p) => p.items) ?? []
   const [pending, setPending] = useState<Pending>(null)
   const [inviting, setInviting] = useState(false)
@@ -500,6 +567,10 @@ export function ConsoleInstructorsPage() {
                 <TabsTrigger value="applications">
                   <Inbox /> Applications
                   {apps.data?.length ? <Badge tone="warning">{apps.data.length}</Badge> : null}
+                </TabsTrigger>
+                <TabsTrigger value="invitations">
+                  <MailPlus /> Invitations
+                  {invitesQ.data?.length ? <Badge tone="neutral">{invitesQ.data.length}</Badge> : null}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -620,6 +691,9 @@ export function ConsoleInstructorsPage() {
             </TabsContent>
             <TabsContent value="applications" className="pt-0">
               <Applications />
+            </TabsContent>
+            <TabsContent value="invitations" className="pt-0">
+              <Invitations onInvite={() => setInviting(true)} />
             </TabsContent>
           </Tabs>
         </Card>

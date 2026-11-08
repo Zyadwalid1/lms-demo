@@ -85,6 +85,29 @@ export interface paths {
         patch: operations["apps_identity_api_update_me"];
         trace?: never;
     };
+    "/api/v1/identity/mfa/totp-qr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Totp Qr
+         * @description The QR code for the key allauth is offering right now (it keeps the pending key in the
+         *     session after GET /_allauth/browser/v1/account/authenticators/totp). Drawn on the server
+         *     as SVG with the `qrcode` package that ships with allauth's MFA extra; the key never
+         *     leaves this user's session.
+         */
+        get: operations["apps_identity_api_totp_qr"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/identity/instructor-invites/preview": {
         parameters: {
             query?: never;
@@ -4735,6 +4758,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/console/people/instructors/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pending Invites
+         * @description Invitations not yet accepted or cancelled, newest first (expired ones too, so they
+         *     can be resent).
+         */
+        get: operations["apps_platform_console_people_pending_invites"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/people/instructors/invites/{invite_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resend Invite */
+        post: operations["apps_platform_console_people_resend_invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/console/people/instructors/invites/{invite_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Invite */
+        post: operations["apps_platform_console_people_cancel_invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/console/people/instructors": {
         parameters: {
             query?: never;
@@ -5878,6 +5956,14 @@ export interface components {
             timezone?: string | null;
             /** Preferred Currency */
             preferred_currency?: string | null;
+        };
+        /**
+         * TotpQrOut
+         * @description The pending 2-step key as a QR code (an SVG data URI), for the setup screen.
+         */
+        TotpQrOut: {
+            /** Image */
+            image: string;
         };
         /** InstructorInvitePreviewOut */
         InstructorInvitePreviewOut: {
@@ -12539,6 +12625,34 @@ export interface components {
              */
             name: string;
         };
+        /** ConsoleInstructorInviteOut */
+        ConsoleInstructorInviteOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+            /** Name */
+            name: string;
+            /** Invited By */
+            invited_by: string;
+            /**
+             * Sent At
+             * Format: date-time
+             */
+            sent_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Send Count */
+            send_count: number;
+            /** Expired */
+            expired: boolean;
+        };
         /** ConsoleInstructorPageOut */
         ConsoleInstructorPageOut: {
             /** Items */
@@ -14193,6 +14307,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeOut"];
+                };
+            };
+        };
+    };
+    apps_identity_api_totp_qr: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TotpQrOut"];
                 };
             };
         };
@@ -21075,6 +21209,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsoleInviteOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_people_pending_invites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleInstructorInviteOut"][];
+                };
+            };
+        };
+    };
+    apps_platform_console_people_resend_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleInstructorInviteOut"];
+                };
+            };
+        };
+    };
+    apps_platform_console_people_cancel_invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsoleOkOut"];
                 };
             };
         };

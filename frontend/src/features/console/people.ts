@@ -120,8 +120,35 @@ export function useReactivateInstructor() {
   return useMutation({ mutationFn: (id: string) => unwrap(api.POST('/api/v1/console/people/instructors/{user_id}/reactivate', { params: { path: { user_id: id } } })), onSuccess: done })
 }
 
+const invitesKey = ['console', 'people', 'invites']
+
 export function useInviteInstructor() {
-  return useMutation({ mutationFn: (body: { email: string; name: string }) => unwrap(api.POST('/api/v1/console/people/instructors/invite', { body })) })
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { email: string; name: string }) => unwrap(api.POST('/api/v1/console/people/instructors/invite', { body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: invitesKey }),
+  })
+}
+
+/** Invitations to teach not yet accepted or cancelled. */
+export function usePendingInvites() {
+  return useQuery({ queryKey: invitesKey, queryFn: () => unwrap(api.GET('/api/v1/console/people/instructors/invites')) })
+}
+
+export function useResendInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => unwrap(api.POST('/api/v1/console/people/instructors/invites/{invite_id}/resend', { params: { path: { invite_id: id } } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: invitesKey }),
+  })
+}
+
+export function useCancelInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => unwrap(api.POST('/api/v1/console/people/instructors/invites/{invite_id}/cancel', { params: { path: { invite_id: id } } })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: invitesKey }),
+  })
 }
 
 export function useDecideApplication() {

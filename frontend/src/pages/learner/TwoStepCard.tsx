@@ -2,6 +2,7 @@ import { Copy, ShieldCheck, ShieldOff, Smartphone } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 
+import { api, unwrap } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardBody, CardHeader } from '@/components/ui/card'
@@ -65,7 +66,7 @@ export function TwoStepCard() {
   const auth = useAuthenticators(true)
   const activate = useActivateTotp()
   const deactivate = useDeactivateTotp()
-  const [setup, setSetup] = useState<{ secret: string; totp_url: string } | null>(null)
+  const [setup, setSetup] = useState<{ secret: string; totp_url: string; qr?: string } | null>(null)
   const [code, setCode] = useState('')
   const [codes, setCodes] = useState<string[] | null>(null)
   const [retry, setRetry] = useState<(() => void) | null>(null)
@@ -79,7 +80,13 @@ export function TwoStepCard() {
     void go()
   }
 
-  const begin = () => guard(async () => setSetup(await startTotp()))
+  const begin = () =>
+    guard(async () => {
+      const offer = await startTotp()
+      // the QR is drawn by our server from the key allauth keeps in the session; without it the key still works
+      const qr = await unwrap(api.GET('/api/v1/identity/mfa/totp-qr')).then((r) => r.image).catch(() => undefined)
+      setSetup({ ...offer, qr })
+    })
   const confirm = (e: FormEvent) => {
     e.preventDefault()
     guard(async () => {
@@ -118,10 +125,14 @@ export function TwoStepCard() {
           </>
         ) : setup ? (
           <form className="grid gap-4" onSubmit={confirm}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              {setup.qr ? (
+                <img src={setup.qr} alt="QR code to add your account to an authenticator app" width={168} height={168} className="size-42 shrink-0 animate-reveal self-center rounded-lg border border-border bg-white p-2 sm:self-start" />
+              ) : null}
             <ol className="grid list-decimal gap-2 pl-5 text-sm">
               <li>Open an authenticator app (for example Microsoft or Google Authenticator).</li>
               <li>
-                Add an account with this key:{' '}
+                {setup.qr ? 'Scan the QR code, or add an account with this key:' : 'Add an account with this key:'}{' '}
                 <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-xs break-all select-all">{setup.secret}</code>{' '}
                 <button type="button" className="text-xs font-medium text-primary hover:underline" onClick={() => void navigator.clipboard.writeText(setup.secret).then(() => toast.success('Key copied'))}>
                   Copy
@@ -136,6 +147,7 @@ export function TwoStepCard() {
               </li>
               <li>Type the 6-digit code it shows.</li>
             </ol>
+            </div>
             <div className="grid gap-3 sm:grid-cols-[12rem_auto] sm:items-end">
               <Field label="Code from the app">{(f) => <Input {...f} inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} maxLength={8} required />}</Field>
               <div className="flex gap-2">

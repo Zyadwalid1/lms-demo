@@ -12,7 +12,7 @@ from core import html
 from core.auth import session_auth
 from core.errors import ServiceError
 
-from .schemas import MeOut, MePatchIn, OkOut
+from .schemas import MeOut, MePatchIn, OkOut, TotpQrOut
 
 router = Router(tags=["identity"])
 
@@ -80,6 +80,28 @@ def update_me(request, body: MePatchIn):
         user.preferred_currency = code
     user.save(update_fields=["full_name", "timezone", "preferred_currency"])
     return _me(user)
+
+
+@router.get("/mfa/totp-qr", response=TotpQrOut, auth=session_auth)
+def totp_qr(request):
+    """The QR code for the key allauth is offering right now (it keeps the pending key in the
+    session after GET /_allauth/browser/v1/account/authenticators/totp). Drawn on the server
+    as SVG with the `qrcode` package that ships with allauth's MFA extra; the key never
+    leaves this user's session."""
+    import base64
+
+    from allauth.mfa.adapter import get_adapter
+    from allauth.mfa.models import Authenticator
+    from allauth.mfa.totp.internal.auth import SECRET_SESSION_KEY
+
+    if Authenticator.objects.filter(user_id=request.user.id, type="totp").exists():
+        raise ServiceError("mfa_already_on", "2-step sign-in is already on.", status=409)
+    secret = request.session.get(SECRET_SESSION_KEY)
+    if not secret:
+        raise ServiceError("no_pending_key", "Start the 2-step set-up first.", status=404)
+    adapter = get_adapter()
+    svg = adapter.build_totp_svg(adapter.build_totp_url(request.user, secret))
+    return {"image": "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()}
 
 
 from .invite_api import router as _instructor_invites  # noqa: E402

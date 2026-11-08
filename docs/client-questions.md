@@ -27,4 +27,4 @@ questions here, never decide them in code.
 | 19 | 2-step sign-in | Optional for users; staff can be required to use it | Require for staff / company admins? |
 | 20 | Maintenance mode, guest browsing, registration | All on (maintenance off) | Defaults for launch |
 | 21 | Payout hold and refund window | The payout hold is never shorter than the refund window (30 days each), so money cannot be paid out and then refunded | Keep them linked? |
-| 22 | Instructor invitations | Staff invite by email; the link works for 7 days; there is no list of pending invitations | Is a list needed? |
+| 22 | Instructor invitations | Staff invite by email; the link works for 7 days. **Answered 2026-11-08: yes**, built: a pending list with resend and cancel | Closed |

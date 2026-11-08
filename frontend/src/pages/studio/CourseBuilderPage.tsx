@@ -11,6 +11,7 @@ import { type StudioCourse, useStudioCourse } from '@/features/studio/api'
 import { cn } from '@/lib/cn'
 import { Link, NavLink } from '@/lib/router'
 
+import { CertificateTab } from './builder/CertificateTab'
 import { CouponsTab } from './builder/CouponsTab'
 import { CurriculumTab } from './builder/CurriculumTab'
 import { DetailsTab } from './builder/DetailsTab'
@@ -18,7 +19,7 @@ import { PricingTab } from './builder/PricingTab'
 import { PublishTab } from './builder/PublishTab'
 import { VERSION_STATUS } from './builder/status'
 
-type Tab = 'details' | 'curriculum' | 'pricing' | 'coupons' | 'publish'
+type Tab = 'details' | 'curriculum' | 'pricing' | 'coupons' | 'certificate' | 'publish'
 
 const COURSE_STATUS: Record<string, { label: string; tone: 'neutral' | 'success' | 'info' | 'warning' }> = {
   draft: { label: 'Draft', tone: 'neutral' },
@@ -35,6 +36,7 @@ function tabsFor(course: StudioCourse) {
   ]
   if (course.ownership !== 'organization') tabs.push({ id: 'pricing', label: 'Pricing', to: 'pricing' })
   if (course.ownership === 'instructor') tabs.push({ id: 'coupons', label: 'Coupons', to: 'coupons' })
+  tabs.push({ id: 'certificate', label: 'Certificate', to: 'certificate' })
   tabs.push({ id: 'publish', label: 'Publish', to: 'publish' })
   return tabs
 }
@@ -153,6 +155,7 @@ export function CourseBuilderPage() {
         {tab === 'curriculum' ? <CurriculumTab course={course} /> : null}
         {tab === 'pricing' ? <PricingTab course={course} /> : null}
         {tab === 'coupons' ? <CouponsTab course={course} /> : null}
+        {tab === 'certificate' ? <CertificateTab course={course} /> : null}
         {tab === 'publish' ? <PublishTab course={course} /> : null}
       </div>
     </div>

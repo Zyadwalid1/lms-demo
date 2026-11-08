@@ -437,3 +437,36 @@ export function useVideoCaptions(assetId: string) {
     }),
   }
 }
+
+// ---------------------------------------------------------------- certificate templates (mockup 23)
+const fetchCertTemplates = () => unwrap(api.GET('/api/v1/studio/certificate-templates'))
+export type StudioCertTemplate = Awaited<ReturnType<typeof fetchCertTemplates>>[number]
+const certTemplatesKey = ['studio', 'certificate-templates']
+
+export function useStudioCertTemplates() {
+  return useQuery({ queryKey: certTemplatesKey, queryFn: fetchCertTemplates })
+}
+
+export type StudioCertTemplateInput = Pick<StudioCertTemplate, 'name' | 'layout' | 'signatory_name' | 'signatory_title' | 'show_qr_code'>
+
+/** Create or edit the instructor's own template; either way it goes to staff for approval. */
+export function useSaveStudioCertTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: StudioCertTemplateInput & { id?: string }) =>
+      id
+        ? unwrap(api.PATCH('/api/v1/studio/certificate-templates/{template_id}', { params: { path: { template_id: id } }, body }))
+        : unwrap(api.POST('/api/v1/studio/certificate-templates', { body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: certTemplatesKey }),
+  })
+}
+
+/** null = the platform default. */
+export function useSetCourseCertTemplate(courseId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (templateId: string | null) =>
+      unwrap(api.PUT('/api/v1/studio/courses/{course_id}/certificate-template', { params: { path: { course_id: courseId } }, body: { template_id: templateId } })),
+    onSuccess: () => courseChanged(qc, courseId),
+  })
+}

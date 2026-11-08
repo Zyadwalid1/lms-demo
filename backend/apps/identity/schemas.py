@@ -35,3 +35,9 @@ class MePatchIn(Schema):
 
 class OkOut(Schema):
     ok: bool = True
+
+
+class TotpQrOut(Schema):
+    """The pending 2-step key as a QR code (an SVG data URI), for the setup screen."""
+
+    image: str

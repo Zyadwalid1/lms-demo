@@ -5,7 +5,7 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 ## Where things stand (2026-11-08)
 | Area | State |
 |---|---|
-| Backend | Complete for the demo: 103 tests, ruff clean. All learner/business/studio/console APIs exist. |
+| Backend | Complete for the demo: 191 tests in 42 files (counted 2026-11-08; the last full run was 103 at M3, the next is in the verification pass), ruff clean. All learner/business/studio/console APIs exist. |
 | M0 foundation | Done: design system (`/design`), layouts, sign-in, workspace switcher, home, course page, My learning, HR compliance overview |
 | M1 marketplace | Done |
 | M2 learning | Done |
@@ -15,6 +15,33 @@ Maintained by Claude Code (`/status`) and read by the planner session. Newest mi
 | M6 polish | To do |
 | Testing | **All browser testing happens after M6** (user decision): the E2E scripts for M4 to M6, the phone check, the reviewer and a full-site demo run. Backend tests are still written with each change |
 | Deployment | To do: production migrate + seed, public webhooks (Stripe, Bunny), Azure CORS |
+
+## M5 review fixes (2026-11-08, planner review; commit "M5 review fixes")
+- **Neon migrations and seeds (user said Claude Code runs them).** `showmigrations` was checked before each run;
+  every pending migration was additive. **dev:** already migrated and seeded when checked (by the planner, 08:26 UTC);
+  then identity **0003_instructor_invites** applied, and `seed_console_demo` re-run (added the instructor earnings
+  and 25 certificates). **e2e:** the 11 pending migrations (engagement 0005, catalog 0005, identity 0002, the 9 M5
+  ones) applied, then identity **0003_instructor_invites**; `seed_console_demo` ran. `seed_demo` on both: demo
+  data already there, so it refused and changed nothing (never reset). e2e runs use `tools/harness/on_e2e.py`
+  (loads `backend/.env.e2e` without printing it).
+- **2-step sign-in QR code:** `GET /identity/mfa/totp-qr` draws the pending key's QR as SVG on the server with
+  allauth's own `qrcode` (no new dependency); the set-up card shows it next to the key. Only signed-in users
+  with a set-up in progress get one; the key is never in the response as text (tested).
+- **Studio > course builder > Certificate tab (mockup 23):** pick the platform default, an approved platform
+  template or an approved own design; design your own (style, colours, wording, what's shown, signatory) with
+  the live preview. Own designs go to staff for approval (pending / not approved with the reason shown); editing
+  an approved one sends it back for approval.
+- **`seed_console_demo` earnings:** seeded paid orders get sale earnings and refunded items refund earnings,
+  dated like the order, so commissions, balances and payouts match sales (adds rows only; tested).
+- **Settings > default currency** now decides a new visitor's first currency (server: `?currency=` → saved
+  preference → setting → GBP, active currencies only; the currency menu shows the same). Tested.
+- **Pending instructor invitations (client question 22):** new table `identity.instructor_invites` (staff-only
+  RLS). Console > Instructors > Invitations lists invitations not yet accepted or cancelled (expired ones too),
+  with Resend (fresh 7 days, audited) and Cancel (every emailed link for it stops working, audited). Inviting the
+  same email again reuses the pending row. Accepting closes it. Links sent before this change still work.
+- Checks (lean, section V): ruff clean, `makemigrations --check` clean, `tsc -b` and `vite build` pass (main entry
+  unchanged at 372 kB). Tests run: seed, MFA QR, default currency, console people (invites), API contract, RLS: all OK.
+  The full suite is not run now (user, 2026-11-08): it belongs to the verification pass.
 
 ## M5 console (2026-11-08, built; verification pass pending)
 Every control in mockups 26, 25, 45, 05, 22, 20, 13, 33, 30, 36, 18 and 02 is wired to the real API; no
@@ -30,8 +57,8 @@ coordinator before committing (B 36, D 31, A+C 69 tests: all OK).
 banner, maintenance page, branding) and the 2-step sign-in hooks load on every page by design.
 
 **Seeding:** `python manage.py seed_console_demo` after `seed_demo` (dev and e2e, after the migrations). Adds
-only; every row has a fixed marker, a second run adds nothing (tested). Seeded learners have no password; it
-does not create instructor earnings for its orders.
+only; every row has a fixed marker, a second run adds nothing (tested). Seeded learners have no password. Its
+orders get instructor earnings through the real `record_sale` / `record_refund` path (review fix, below).
 
 **Bugs found and fixed while integrating**
 - Duplicate schema names across helpers (`ConsoleReportOut`, `ConsoleActivityOut`, `ConsoleCoursePriceIn`): renamed.
@@ -41,12 +68,8 @@ does not create instructor earnings for its orders.
 - The seed duplicated rows on a re-run (shared random stream): each order now has its own stream.
 
 **Known limits (not hidden in the UI)**
-- 2-step setup shows the key and an "open in the app" link, not a QR code (a QR library is a new dependency: ask).
-- Settings > default currency is saved, but a visitor's first currency still comes from the commerce logic;
-  the language setting sets `<html lang>` only (the UI is English).
-- No list of pending instructor invitations (signed 7-day links, audited when sent). Client question 22.
+- The language setting sets `<html lang>` only (the UI is English).
 - Subscription promotions are redeemed through Stripe coupons, so their per-person limit is not counted.
-- Instructor certificate-template picker in the studio: the API exists, the studio screen does not (not in the brief).
 - `SchemaTransactionTestCase` does not restore the seeded `revenue_shares` rows; tests that change them reset them.
 
 **Staff bell:** applications, course and template submissions, tickets and replies, reported content, learner
@@ -66,6 +89,8 @@ route, light/dark screenshots vs mockups, reviewer agent.
   - catalog **0005** `lectures.prerequisite_key` (prerequisite lessons);
   - identity **0002** `instructor_profiles.platform_fee_bps` (each instructor's platform fee).
   Until they run, the studio, player and console pages that read these columns fail on Neon.
+- **Done 2026-11-08 by Claude Code (user's answer): all of the above and the M5 set below ran on dev and e2e,
+  plus identity 0003_instructor_invites (new table, staff-only RLS).** Nothing is pending.
 - **M5 (dev and e2e, same command; adds tables, columns and rows only, checked with `sqlmigrate`):** catalog **0006_console**, learning **0004_console** and **0005_console_a_verify** (a new certificate-check function; the old one stays), commerce **0004_console**, payouts **0003_console**, engagement **0006_console** and **0007_console_templates** (inserts notification wording), payouts **0004_console_c_request_failed** (choices only, no SQL), platform **0003_console_settings** (inserts settings). The console fails on Neon until these run.
 
 ## Settings still needed

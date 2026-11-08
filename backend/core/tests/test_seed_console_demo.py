@@ -4,11 +4,11 @@ import io
 
 from django.core.management import call_command
 
-from apps.commerce.models import Invoice, Order, Plan, PlanPrice, Subscription
+from apps.commerce.models import Invoice, Order, OrderItem, Plan, PlanPrice, Subscription
 from apps.engagement.models import ContentReport, Ticket
 from apps.identity.models import InstructorProfile, User
 from apps.learning.models import Certificate, Enrollment
-from apps.payouts.models import PayoutRequest
+from apps.payouts.models import Earning, PayoutRequest
 from core.tenancy import tenant_context
 from core.tests import factories as f
 from core.tests.base import SchemaTransactionTestCase
@@ -18,7 +18,7 @@ class SeedConsoleDemoTest(SchemaTransactionTestCase):
     def counts(self):
         with tenant_context(user_id=self.staff.id, staff=True):
             return {m.__name__: m.objects.count() for m in (User, Order, Enrollment, Subscription, Invoice, Ticket,
-                                                          ContentReport, PayoutRequest, Certificate)}  # fmt: skip
+                                                          ContentReport, PayoutRequest, Certificate, Earning)}  # fmt: skip
 
     def test_seed_is_idempotent_and_fills_the_dashboard(self):
         self.staff, teacher, *_ = f.users()
@@ -39,6 +39,12 @@ class SeedConsoleDemoTest(SchemaTransactionTestCase):
         self.assertEqual(first["Ticket"], 8)
         self.assertEqual(first["PayoutRequest"], 1)  # one approved instructor
         self.assertGreater(first["Invoice"], 14)
+        with tenant_context(user_id=self.staff.id, staff=True):  # the instructor earns from every seeded sale
+            sold = OrderItem.objects.filter(order__status__in=("paid", "refunded")).count()
+            self.assertEqual(Earning.objects.filter(kind="sale").count(), sold)
+            refunds = Earning.objects.filter(kind="refund")
+            self.assertEqual(refunds.count(), OrderItem.objects.filter(refunded_at__isnull=False).count())
+            self.assertTrue(all(e.amount_gbp_minor < 0 for e in refunds))
 
         call_command("seed_console_demo", "--orders", "60", stdout=io.StringIO())
         self.assertEqual(self.counts(), first)  # nothing duplicated

@@ -10,8 +10,9 @@ renewals and plan events, tickets, reviews (some reported), payout requests, cer
 (some expiring, one revoked) and broadcasts.
 
 The seeded learners have no password (nobody signs in as them). Stripe, Bunny and email are
-never called. Instructor earnings are not created for these orders: the payout screens use
-the earnings of the main demo (seed_demo).
+never called. Instructor earnings for the seeded orders go through the real payouts code
+(record_sale / record_refund, both idempotent), so commissions, balances and payouts match
+the sales; a re-run also adds earnings for orders seeded by an older version of this command.
 """
 
 import random
@@ -105,6 +106,7 @@ class Command(BaseCommand):
                 raise CommandError("No published marketplace course yet. Run seed_demo first.")
             self.added = {}
             for title, fn in (("Learners", self.learners), ("Orders and refunds", lambda: self.orders(orders)),
+                              ("Instructor earnings", self.earnings),
                               ("Subscriptions", self.subscriptions), ("Tickets", self.tickets),
                               ("Reviews and reports", self.reviews), ("Payout requests", self.payout_requests),
                               ("Certificates", self.certificates), ("Broadcasts", self.broadcasts)):  # fmt: skip
@@ -217,6 +219,29 @@ class Command(BaseCommand):
                                  fx_rate=Decimal(1), gbp_total_minor=2999, status="failed", created_at=when,
                                  stripe_session_id=key)  # fmt: skip
             added += 1
+        return added
+
+    # ------------------------------------------------------------------ earnings
+    def earnings(self) -> int:
+        """The same lines the order.paid outbox job writes (commission rules, the instructor's
+        rate, the hold), dated at the sale; refunds get their negative line on the refund day."""
+        from apps.payouts import services as payouts
+        from apps.payouts.models import Earning
+
+        added = 0
+        for order_id in (
+            Order.objects.filter(stripe_session_id__startswith=f"{MARK}o_", paid_at__isnull=False)
+            .order_by("paid_at")
+            .values_list("id", flat=True)
+        ):
+            added += payouts.record_sale(order_id)
+        for item_id, refunded_at in OrderItem.objects.filter(
+            order__stripe_session_id__startswith=f"{MARK}o_", refunded_at__isnull=False
+        ).values_list("id", "refunded_at"):
+            added += payouts.record_refund(item_id)
+            Earning.objects.filter(order_item_id=item_id, kind="refund", earned_at__gt=refunded_at).update(
+                earned_at=refunded_at
+            )
         return added
 
     # ------------------------------------------------------------------ subscriptions

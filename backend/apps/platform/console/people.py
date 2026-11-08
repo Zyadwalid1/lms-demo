@@ -16,7 +16,7 @@ from apps.catalog.permissions import for_user as instructor_permissions
 from apps.engagement.notify import notify
 from apps.identity import invites
 from apps.identity import services as identity
-from apps.identity.models import InstructorProfile, User
+from apps.identity.models import InstructorInvite, InstructorProfile, User
 from apps.payouts import selectors as ledger
 from apps.payouts import services as payouts
 from apps.payouts.models import Payout, PayoutRequest
@@ -598,6 +598,59 @@ def invite_instructor(request, body: ConsoleInviteIn):
     invites.send_invite(email=email, name=html.plain(body.name, 200), invited_by=request.user)
     audit_request(request, "instructor.invite", "user", email, {"email": email})
     return {"email": email, "expires_days": 7}
+
+
+class ConsoleInstructorInviteOut(Schema):
+    id: UUID
+    email: str
+    name: str
+    invited_by: str
+    sent_at: datetime
+    expires_at: datetime
+    send_count: int
+    expired: bool
+
+
+def _invite_out(i) -> dict:
+    return {"id": i.id, "email": i.email, "name": i.name, "invited_by": i.invited_by.full_name if i.invited_by else "",
+            "sent_at": i.sent_at, "expires_at": i.expires_at, "send_count": i.send_count,
+            "expired": i.expires_at <= timezone.now()}  # fmt: skip
+
+
+def _pending_invite(invite_id):
+    return get_object_or_404(InstructorInvite.objects.select_related("invited_by"), pk=invite_id,
+                             accepted_at__isnull=True, cancelled_at__isnull=True)  # fmt: skip
+
+
+@router.get("/people/instructors/invites", response=list[ConsoleInstructorInviteOut])
+def pending_invites(request):
+    """Invitations not yet accepted or cancelled, newest first (expired ones too, so they
+    can be resent)."""
+    staff(request)
+    rows = (
+        InstructorInvite.objects.filter(accepted_at__isnull=True, cancelled_at__isnull=True)
+        .select_related("invited_by")
+        .order_by("-sent_at")[:100]
+    )
+    return [_invite_out(i) for i in rows]
+
+
+@router.post("/people/instructors/invites/{invite_id}/resend", response=ConsoleInstructorInviteOut)
+@transaction.atomic
+def resend_invite(request, invite_id: UUID):
+    staff(request)
+    invite = invites.resend(invite=_pending_invite(invite_id), by=request.user)
+    audit_request(request, "instructor.invite_resend", "user", invite.email, {"email": invite.email})
+    return _invite_out(invite)
+
+
+@router.post("/people/instructors/invites/{invite_id}/cancel", response=ConsoleOkOut)
+@transaction.atomic
+def cancel_invite(request, invite_id: UUID):
+    staff(request)
+    invite = invites.cancel(invite=_pending_invite(invite_id))
+    audit_request(request, "instructor.invite_cancel", "user", invite.email, {"email": invite.email})
+    return {"ok": True}
 
 
 @router.get("/people/instructors", response=ConsoleInstructorPageOut)

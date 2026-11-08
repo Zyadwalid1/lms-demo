@@ -180,3 +180,46 @@ class ConsolePeopleTest(SchemaTransactionTestCase):
         )
         self.assertTrue(self.get("/identity/me").json()["is_instructor"])
         self.assertIn("instructor_approved", self.kinds(self.sara))
+
+    def test_pending_invites_resend_and_cancel(self):
+        from django.core import mail
+
+        self.as_(self.staff)
+        self.post("/console/people/instructors/invite", {"email": "new@x.test", "name": "Nadia"})
+        self.post("/console/people/instructors/invite", {"email": "new@x.test"})  # again: one row, sent twice
+        self.post("/console/people/instructors/invite", {"email": "omar@learnhub.example.com"})
+        rows = self.get("/console/people/instructors/invites").json()
+        self.assertEqual([r["email"] for r in rows], ["omar@learnhub.example.com", "new@x.test"])
+        nadia = rows[1]
+        self.assertEqual((nadia["name"], nadia["send_count"], nadia["expired"]), ("Nadia", 2, False))
+
+        mail.outbox.clear()
+        r = self.post(f"/console/people/instructors/invites/{nadia['id']}/resend")
+        self.assertEqual(r.json()["send_count"], 3)
+        self.assertEqual(mail.outbox[0].to, ["new@x.test"])
+        token = mail.outbox[0].body.split("/teach/invite/")[1].split()[0]
+        self.assertEqual(self.client.get(f"{API}/identity/instructor-invites/preview", {"token": token}).status_code,
+                         200)  # fmt: skip
+
+        self.assertEqual(
+            self.post(f"/console/people/instructors/invites/{nadia['id']}/cancel").json(), {"ok": True}
+        )
+        r = self.client.get(f"{API}/identity/instructor-invites/preview", {"token": token})
+        self.assertEqual(r.json()["error"]["code"], "invite_cancelled")  # every link for it stops working
+        self.assertEqual(
+            self.post(f"/console/people/instructors/invites/{nadia['id']}/resend").status_code, 404
+        )
+
+        omar = self.get("/console/people/instructors/invites").json()[0]
+        mail.outbox.clear()
+        self.post(f"/console/people/instructors/invites/{omar['id']}/resend")
+        omar_token = mail.outbox[0].body.split("/teach/invite/")[1].split()[0]
+        self.as_(self.omar)
+        self.assertEqual(self.post("/identity/instructor-invites/accept", {"token": omar_token}).json()["status"],
+                         "approved")  # fmt: skip
+        self.as_(self.staff)
+        self.assertEqual(
+            self.get("/console/people/instructors/invites").json(), []
+        )  # accepted: no longer pending
+        self.as_(self.sara)
+        self.assertEqual(self.get("/console/people/instructors/invites").status_code, 403)
