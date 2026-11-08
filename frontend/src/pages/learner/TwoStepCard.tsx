@@ -36,7 +36,7 @@ function ReauthDialog({ open, onDone, onCancel }: { open: boolean; onDone: () =>
       <DialogContent title="Confirm it's you" description="Enter your password to change 2-step sign-in.">
         <form className="grid gap-4" onSubmit={submit}>
           <Field label="Password" error={error || undefined}>{(f) => <Input {...f} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />}</Field>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
             <Button type="submit" loading={busy}>Continue</Button>
           </div>

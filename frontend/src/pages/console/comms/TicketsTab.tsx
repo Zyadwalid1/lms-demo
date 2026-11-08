@@ -96,7 +96,7 @@ function CreateTicketDialog({ open, onOpenChange, onCreated }: { open: boolean; 
             <span className="text-sm font-medium" id="new-ticket-body-label">First message</span>
             <RichText id="new-ticket-body" label="First message" value={v.body} onChange={(body) => setV({ ...v, body })} minHeight={120} placeholder="What you told them, or what happens next" />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" loading={create.isPending} disabled={isEmptyHtml(v.body)}>Create ticket</Button>
           </div>

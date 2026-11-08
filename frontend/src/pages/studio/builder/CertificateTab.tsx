@@ -218,7 +218,7 @@ function TemplateDialog({ template, open, onOpenChange }: { template: StudioCert
           <div className="grid content-start gap-3">
             <CertificatePreview data={{ ...f, layout }} />
             {template && template.status !== 'pending' ? <p className="text-[12.5px] text-warning">Saving sends this design for approval again.</p> : null}
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>

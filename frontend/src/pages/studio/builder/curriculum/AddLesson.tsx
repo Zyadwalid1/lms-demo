@@ -51,7 +51,7 @@ function AddLessonForm({ courseId, adding, onClose, onCreated }: { courseId: str
         </Field>
       ) : null}
       {error ? <p role="alert" className="rounded-md bg-danger-soft px-3 py-2 text-[13px] text-danger">{error}</p> : null}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
         <Button type="submit" loading={c.addLecture.isPending} disabled={!title.trim() || urlBad}>Add and edit</Button>
       </div>

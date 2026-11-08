@@ -72,7 +72,7 @@ function NewTicket({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
           </Field>
           <Field label="Subject">{(f) => <Input {...f} value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={200} required />}</Field>
           <Field label="Message">{(f) => <Textarea {...f} className="min-h-36" value={body} onChange={(e) => setBody(e.target.value)} maxLength={10000} required />}</Field>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

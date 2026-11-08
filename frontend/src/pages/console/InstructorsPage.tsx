@@ -90,7 +90,7 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
         >
           <Field label="Name" hint="Used in the greeting (optional).">{(p) => <Input {...p} value={name} onChange={(e) => setName(e.target.value)} maxLength={200} autoComplete="off" />}</Field>
           <Field label="Email">{(p) => <Input {...p} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={320} autoComplete="off" />}</Field>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
@@ -127,7 +127,7 @@ function EditInstructorDialog({ d, open, onOpenChange }: { d: InstructorDetail |
           <Field label="Headline">{(p) => <Input {...p} value={form.headline} onChange={set('headline')} maxLength={160} />}</Field>
           <Field label="Bio">{(p) => <Textarea {...p} value={form.bio} onChange={set('bio')} maxLength={5000} rows={5} />}</Field>
           <Field label="Website" hint="An https:// link.">{(p) => <Input {...p} type="url" value={form.website_url} onChange={set('website_url')} maxLength={500} placeholder="https://" />}</Field>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

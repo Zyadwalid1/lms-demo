@@ -237,7 +237,7 @@ function AskDialog({ open, onOpenChange, courseId, lecture, onAsked }: { open: b
           <label className="inline-flex items-center gap-2 text-sm">
             <Switch checked={pin} onCheckedChange={setPin} /> About “{lecture.title}”
           </label>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

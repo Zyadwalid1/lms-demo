@@ -41,7 +41,7 @@ export function ReportButton({ kind, id, authorId }: { kind: keyof typeof NOUN; 
             <Field label="What is wrong?">
               {(f) => <Textarea {...f} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={3} placeholder="For example: offensive, spam or off topic" required />}
             </Field>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" loading={report.isPending} disabled={reason.trim().length < 3}>Send report</Button>
             </div>

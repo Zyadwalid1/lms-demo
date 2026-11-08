@@ -250,7 +250,7 @@ export function CourseContent({ course, selectedId, highlight, onSelect, onAdd, 
               onChange={(e) => setNewModule(e.target.value)}
               onKeyDown={(e) => e.key === 'Escape' && setNewModule(null)}
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" size="sm" variant="ghost" onClick={() => setNewModule(null)}>Cancel</Button>
               <Button type="submit" size="sm" loading={c.addSection.isPending} disabled={!newModule.trim()}><Plus /> Add module</Button>
             </div>

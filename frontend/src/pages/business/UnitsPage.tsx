@@ -79,7 +79,7 @@ function UnitDialog({ action, onClose, onCreated }: { action: UnitAction; onClos
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent title={titles[action.kind]} description={action.kind === 'archive' ? 'It disappears from the tree, filters and reports. Units below it are archived too. Only empty units can be archived.' : undefined}>
         {action.kind === 'archive' ? (
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <DialogClose asChild>
               <Button variant="secondary">Cancel</Button>
             </DialogClose>
@@ -108,7 +108,7 @@ function UnitDialog({ action, onClose, onCreated }: { action: UnitAction; onClos
                 {(p) => <Input {...p} autoFocus={action.kind === 'code'} maxLength={32} value={code} onChange={(e) => setCode(e.target.value)} />}
               </Field>
             ) : null}
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <DialogClose asChild>
                 <Button type="button" variant="secondary">
                   Cancel
@@ -147,7 +147,7 @@ function ManagersSheet({ unit, open, onOpenChange }: { unit: Unit; open: boolean
         onOpenChange(o)
       }}
     >
-      <DialogContent side="right" title={`Managers of ${unit.name}`} description="Managers see and remind the people in this unit and every unit below it." className="w-[min(440px,92vw)]">
+      <DialogContent side="right" title={`Managers of ${unit.name}`} description="Managers see and remind the people in this unit and every unit below it." className="w-[min(600px,100vw)]">
         <div className="grid gap-4 p-4">
           {selected.length ? (
             <ul className="flex flex-wrap gap-1.5" aria-label="Chosen managers">
@@ -186,7 +186,7 @@ function ManagersSheet({ unit, open, onOpenChange }: { unit: Unit; open: boolean
             )}
           />
           <p className="text-xs text-muted">Learners you choose become managers.</p>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <DialogClose asChild>
               <Button variant="secondary">Cancel</Button>
             </DialogClose>
@@ -451,7 +451,7 @@ function JobRoleRow({ r, admin }: { r: JobRole; admin: boolean }) {
           </Button>
           <Dialog open={confirm} onOpenChange={setConfirm}>
             <DialogContent title={`Archive ${r.name}?`} description="It disappears from filters and requirement targets. Only roles nobody has can be archived.">
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap justify-end gap-2">
                 <DialogClose asChild>
                   <Button variant="secondary">Cancel</Button>
                 </DialogClose>

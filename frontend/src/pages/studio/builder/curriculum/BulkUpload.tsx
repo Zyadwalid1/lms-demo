@@ -36,7 +36,7 @@ export function BulkUploadDialog({ courseId, sections, defaultSectionId, open, o
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
       {open ? (
-        <DialogContent title="Bulk upload videos" description="Each video becomes a new video lesson, named after its file. You can rename them afterwards." className="sm:max-w-2xl">
+        <DialogContent title="Bulk upload videos" description="Each video becomes a new video lesson, named after its file. You can rename them afterwards." className="max-w-2xl">
           <BulkUploadForm courseId={courseId} sections={sections} defaultSectionId={defaultSectionId} onBusy={setBusy} stopRef={stop} onClose={close} />
         </DialogContent>
       ) : null}

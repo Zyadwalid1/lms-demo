@@ -87,7 +87,7 @@ function CompanyCourseDialog({ open, onOpenChange }: { open: boolean; onOpenChan
               </NativeSelect>
             )}
           </Field>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" loading={create.isPending} disabled={title.trim().length < 3}>Create and open builder</Button>
           </div>
@@ -112,7 +112,7 @@ function CategoryPicker({ open, onOpenChange, count, onPick, loading }: { open: 
               </NativeSelect>
             )}
           </Field>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" loading={loading} disabled={!value}>Change category</Button>
           </div>
@@ -513,7 +513,7 @@ function CategoryDialog({ cat, open, onOpenChange, parents }: { cat?: ConsoleCat
               )}
             </Field>
           ) : null}
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" loading={create.isPending || update.isPending}>{cat ? 'Save' : 'Add category'}</Button>
           </div>

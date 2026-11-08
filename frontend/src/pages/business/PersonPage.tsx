@@ -230,7 +230,7 @@ function RemoveButton({ person }: { person: PersonData }) {
         <UserX /> Remove from company
       </Button>
       <DialogContent title={`Remove ${person.name || person.email}?`} description="They lose access to the company's training straight away. Their records stay for your audits.">
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <DialogClose asChild>
             <Button variant="secondary">Cancel</Button>
           </DialogClose>

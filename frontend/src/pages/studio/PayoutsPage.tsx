@@ -215,7 +215,7 @@ function MethodForm({ onDone, existing }: { onDone: () => void; existing: string
           {error}
         </p>
       ) : null}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="secondary" onClick={onDone}>
           Cancel
         </Button>
@@ -305,13 +305,13 @@ function MethodsCard({ me }: { me: MyPayouts }) {
         )}
       </CardBody>
       <Dialog open={adding} onOpenChange={setAdding}>
-        <DialogContent side="right" title="Add payout method" className="w-[min(460px,100vw)]">
+        <DialogContent side="right" title="Add payout method" className="w-[min(600px,100vw)]">
           {adding ? <MethodForm existing={me.methods.map((m) => m.method)} onDone={() => setAdding(false)} /> : null}
         </DialogContent>
       </Dialog>
       <Dialog open={!!removing} onOpenChange={(o) => !o && setRemoving(null)}>
         <DialogContent title={`Remove ${removing?.label ?? ''}?`} description="You can add it again later. We check new details before paying them.">
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button variant="secondary" onClick={() => setRemoving(null)}>
               Cancel
             </Button>

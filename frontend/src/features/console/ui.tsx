@@ -96,7 +96,7 @@ export function DateRangeSelect({ value, onChange }: { value: RangeQuery; onChan
                 <Input id="range-end" type="date" value={end} min={start || undefined} onChange={(e) => setEnd(e.target.value)} required />
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setCustom(false)}>
                 Cancel
               </Button>
@@ -155,7 +155,7 @@ export function StatusPill({ status, label }: { status: string; label?: string }
 export function DetailSheet({ open, onOpenChange, title, description, children }: { open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: string; children: ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title={title} description={description} side="right" className="w-[min(520px,100vw)]">
+      <DialogContent title={title} description={description} side="right" className="w-[min(720px,100vw)]">
         <div className="p-4 sm:p-5">{children}</div>
       </DialogContent>
     </Dialog>
@@ -216,7 +216,7 @@ export function ConfirmDialog({ open, onOpenChange, title, body, confirmLabel, t
               <Input id="confirm-phrase" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
             </div>
           ) : null}
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

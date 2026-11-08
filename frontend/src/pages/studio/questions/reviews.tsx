@@ -119,7 +119,7 @@ function ReviewCard({ review: r }: { review: InboxReview }) {
             Your reply
           </label>
           <Textarea id={fieldId} value={body} onChange={(e) => setBody(e.target.value)} maxLength={4000} autoFocus placeholder="Thank them, or answer their point. Everyone can see your reply." />
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>
               Cancel
             </Button>

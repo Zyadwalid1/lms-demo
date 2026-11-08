@@ -138,7 +138,7 @@ function Composer({ open, onOpenChange, courseId, courseTitle }: { open: boolean
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent side="right" title="New announcement" description={courseTitle} className="w-[min(560px,100vw)]">
+      <DialogContent side="right" title="New announcement" description={courseTitle} className="w-[min(680px,100vw)]">
         <form onSubmit={send} className="grid gap-4 p-4">
           <Field label="Title">{(f) => <Input {...f} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} required placeholder="e.g. New section on testing is live" />}</Field>
           <Field label="Message" hint="Plain text. Line breaks are kept.">
@@ -162,7 +162,7 @@ function Composer({ open, onOpenChange, courseId, courseTitle }: { open: boolean
             </div>
           </section>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => close(false)}>
               Cancel
             </Button>

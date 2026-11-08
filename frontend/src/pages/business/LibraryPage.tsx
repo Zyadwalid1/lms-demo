@@ -30,7 +30,7 @@ function ProgressSheet({ course, onClose }: { course: LibraryCourse | null; onCl
   return (
     <Dialog open={!!course} onOpenChange={(o) => !o && onClose()}>
       {course ? (
-        <DialogContent side="right" title={course.title} description="Who has this course and how far they are" className="w-[min(480px,94vw)]">
+        <DialogContent side="right" title={course.title} description="Who has this course and how far they are" className="w-[min(640px,100vw)]">
           <div className="grid gap-4 p-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg border border-border p-3">

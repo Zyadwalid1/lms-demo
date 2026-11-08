@@ -134,7 +134,7 @@ function RuleDialog({ draft, onClose }: { draft: RuleDraft | null; onClose: () =
 
   return (
     <Dialog open={!!draft} onOpenChange={(o) => !o && (onClose(), setKey(null))}>
-      <DialogContent title={d.id ? 'Edit commission rule' : 'Add commission rule'} description="The most specific rule wins: course, then instructor, then category, then price band. Past earnings never change." className="sm:max-w-lg">
+      <DialogContent title={d.id ? 'Edit commission rule' : 'Add commission rule'} description="The most specific rule wins: course, then instructor, then category, then price band. Past earnings never change." className="max-w-2xl">
         <form className="grid gap-4" onSubmit={(e) => (e.preventDefault(), submit())}>
           <Field label="Name" hint="Optional, for example “Launch offer”.">{(p) => <Input {...p} value={d.name} onChange={(e) => set('name', e.target.value)} maxLength={120} />}</Field>
           <div className="grid gap-1.5">
@@ -181,7 +181,7 @@ function RuleDialog({ draft, onClose }: { draft: RuleDraft | null; onClose: () =
             <Label htmlFor="rule-active">Active</Label>
             <Switch id="rule-active" checked={d.active} onCheckedChange={(v) => set('active', v)} />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancel
             </Button>
@@ -537,7 +537,7 @@ function SettingsForm({ only }: { only?: 'pool' }) {
           </div>
         </>
       )}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="secondary" disabled={!dirty} onClick={() => setForm(null)}>
           Discard
         </Button>

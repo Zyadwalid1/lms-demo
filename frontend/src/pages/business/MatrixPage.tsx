@@ -301,7 +301,7 @@ export function MatrixPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         {sel ? (
-          <DialogContent side="right" title={sel.row.name} description={sel.requirementName ?? (sel.row.job_title || sel.row.email)} className="w-[min(480px,100vw)]">
+          <DialogContent side="right" title={sel.row.name} description={sel.requirementName ?? (sel.row.job_title || sel.row.email)} className="w-[min(640px,100vw)]">
             <div className="grid gap-5 p-4">
               <div className="flex items-center gap-3">
                 <Avatar name={sel.row.name} size="lg" />

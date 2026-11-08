@@ -163,7 +163,7 @@ export function RequirementsPage() {
 
       {admin ? (
         <Dialog open={sheet.open} onOpenChange={(open) => setSheet((s) => ({ ...s, open }))}>
-          <DialogContent side="right" title={sheet.requirement ? 'Edit requirement' : 'New requirement'} description={sheet.requirement?.name} className="w-[min(560px,100vw)]">
+          <DialogContent side="right" title={sheet.requirement ? 'Edit requirement' : 'New requirement'} description={sheet.requirement?.name} className="w-[min(680px,100vw)]">
             <RequirementForm key={sheet.requirement?.id ?? 'new'} requirement={sheet.requirement} onDone={() => setSheet((s) => ({ ...s, open: false }))} />
           </DialogContent>
         </Dialog>

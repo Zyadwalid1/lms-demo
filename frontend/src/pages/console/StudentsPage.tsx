@@ -106,7 +106,7 @@ function EditAccountDialog({ pending, onClose }: { pending: Pending; onClose: ()
         >
           <Field label="Full name">{(p) => <Input {...p} value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} autoComplete="off" />}</Field>
           <Field label="Email">{(p) => <Input {...p} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={320} autoComplete="off" />}</Field>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancel
             </Button>

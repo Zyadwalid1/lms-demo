@@ -368,7 +368,7 @@ function QuestionForm({ courseId, quizId, questionId, initial, onDirty, onDone }
         </ul>
       ) : null}
       {error ? <p role="alert" className="rounded-md bg-danger-soft px-3 py-2 text-[13px] text-danger">{error}</p> : null}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={() => (!dirty || window.confirm('Discard your changes to this question?')) && onDone()}>Cancel</Button>
         <Button type="button" size="sm" loading={saving} onClick={() => void save()}>{questionId ? 'Save question' : 'Add question'}</Button>
       </div>

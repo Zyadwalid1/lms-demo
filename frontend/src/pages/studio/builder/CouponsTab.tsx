@@ -82,7 +82,7 @@ function CreateCouponForm({ courseId, onDone }: { courseId: string; onDone: () =
           {error}
         </p>
       ) : null}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <DialogClose asChild>
           <Button type="button" variant="secondary">
             Cancel
@@ -229,7 +229,7 @@ export function CouponsTab({ course }: { course: StudioCourse }) {
       </Dialog>
       <Dialog open={!!stopping} onOpenChange={(o) => !o && setStopping(null)}>
         <DialogContent title={`Turn off ${stopping?.code ?? ''}?`} description="Learners can no longer use this code. This can't be undone.">
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <DialogClose asChild>
               <Button variant="secondary">Keep it</Button>
             </DialogClose>

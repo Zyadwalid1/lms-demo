@@ -183,7 +183,7 @@ function PreviewDialog({ slug, lecture, onClose }: { slug: string; lecture: { ke
   const { data, isLoading, error } = usePreview(slug, lecture?.key ?? null)
   return (
     <Dialog open={!!lecture} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent title={lecture ? `Preview: ${lecture.title}` : 'Preview'} className="w-[min(860px,calc(100vw-32px))]">
+      <DialogContent title={lecture ? `Preview: ${lecture.title}` : 'Preview'} className="max-w-[860px]">
         <div className="relative aspect-video overflow-hidden rounded-lg bg-nav">
           {isLoading ? (
             <Skeleton className="size-full rounded-none" />

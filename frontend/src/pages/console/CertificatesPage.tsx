@@ -144,7 +144,7 @@ function TemplateEditor({ template, open, onOpenChange }: { template: CertTempla
           <div className="grid content-start gap-3">
             <CertificatePreview data={{ ...f, signature_preview_url: preview }} />
             {template?.status === 'pending' ? <p className="text-[12.5px] text-warning">An instructor's template: approve it in Approvals.</p> : null}
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button type="submit" loading={save.isPending}>{template ? 'Save template' : 'Create template'}</Button>
             </div>

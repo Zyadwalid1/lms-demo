@@ -82,7 +82,7 @@ function CreateCompany({ open, onOpenChange, onCreated }: { open: boolean; onOpe
               )}
             </Field>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" loading={create.isPending}>Create company</Button>
           </div>
@@ -127,7 +127,7 @@ function DetailsSection({ c }: { c: ConsoleCompanyDetail }) {
           )}
         </Field>
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button variant="secondary" size="sm" disabled={!nameChanged && !seatsChanged && !statusChanged} onClick={() => (setName(c.name), setSeats(c.seat_limit ? String(c.seat_limit) : ''), setStatus(c.status))}>
           Discard
         </Button>

@@ -150,7 +150,7 @@ function RevokeButton({ invite }: { invite: Invite }) {
         Revoke
       </Button>
       <DialogContent title="Revoke this invitation?" description={`The link sent to ${invite.email} will stop working. You can invite them again later.`}>
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <DialogClose asChild>
             <Button variant="secondary">Cancel</Button>
           </DialogClose>

@@ -256,7 +256,7 @@ function PlanCourses({ plan }: { plan: ConsolePlan }) {
     return (
       <div className="grid gap-3">
         <CoursePicker value={ids} onChange={setIds} />
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
           <Button loading={save.isPending} onClick={() => save.mutate(ids, { onSuccess: () => (toast.success('Included courses saved.'), setEditing(false)), onError: (e) => toast.error((e as Error).message) })}>Save courses</Button>
         </div>
@@ -385,7 +385,7 @@ function PlanForm({ plan, onDone }: { plan: ConsolePlan | null; onDone: (id?: st
         <p className="text-[13px] text-muted">Change prices and included courses from the plan’s panel.</p>
       )}
       {error ? <p role="alert" className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p> : null}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="secondary" onClick={() => onDone()}>Cancel</Button>
         <Button type="submit" loading={create.isPending || update.isPending}>{plan ? 'Save plan' : 'Create plan'}</Button>
       </div>

@@ -448,7 +448,7 @@ function ScheduleForm() {
         </div>
         <Switch id="payout-requests" checked={f.requests} onCheckedChange={(v) => set('requests', v)} />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="secondary" disabled={!form} onClick={() => setForm(null)}>
           Discard
         </Button>
